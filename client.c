@@ -38,6 +38,7 @@ int connect_to_server(const char *server_ip) {
     return sock;
 }
 
+
 // Sends a message to the server.
 void send_message(int socket, const char *message) {
     int bytes_sent = write(socket, message, strlen(message));
@@ -77,4 +78,16 @@ void receive_message(int socket, char *buffer, int bufsize) {
 void close_connection(int socket) {
     close(socket);
     printf("Connection closed.\n");
+}
+
+void send_infos(const char *ip_address, const char *message) {
+    int socket;
+    char recv_buffer[MSG_LEN];
+
+    socket = connect_to_server(ip_address);
+
+    send_message(socket, message);
+    receive_message(socket, recv_buffer, MSG_LEN - 1);
+
+    close_connection(socket);
 }
