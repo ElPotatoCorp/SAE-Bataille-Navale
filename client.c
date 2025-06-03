@@ -91,3 +91,22 @@ void send_infos(const char *ip_address, const char *message) {
 
     close_connection(socket);
 }
+
+void try_send_infos(const char *ip_address, const char *message) {
+    int socket;
+    char recv_buffer[MSG_LEN];
+
+    while (1) {
+        socket = connect_to_server(ip_address);
+        if (socket >= 0) {
+            break;
+        }
+        printf("Connection failed, retrying in 1 second...\n");
+        sleep(1);
+    }
+
+    send_message(socket, message);
+    receive_message(socket, recv_buffer, MSG_LEN - 1);
+
+    close_connection(socket);
+}

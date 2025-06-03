@@ -9,12 +9,7 @@
 #define MSG_LEN 256
 
 extern int listenSocket;
-extern int server_should_run;
-
-void handle_sigint(int sig);
-void stop_server();
-int create_listening_socket();
-void handle_client(int clientSocket);
-void start_server();
+int create_listening_socket(void);
+const char* recv_infos(void);
 
 #endif // SERVER_H
