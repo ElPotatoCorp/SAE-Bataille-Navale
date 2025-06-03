@@ -4,28 +4,39 @@
 #include "server.h"
 #include "client.h"
 
+void help(char* command)
+{
+    printf("Usage: %s <ip_address> <mode>\n", command);
+    printf("  <ip_address>: IP address of the other player\n");
+    printf("  <mode>: 1 = first player, 2 = second player\n");
+}
+
 int main(int argc, char *argv[]) {
+    if (argc == 1 || (argc == 2 && strcmp(argv[1], "-h") == 0)) {
+        help(argv[0]);
+        return 0;
+    }
+
     if (argc != 3 && argc != 4) {
-        printf("Usage: %s <ip_address> <mode>\n", argv[0]);
-        printf("  <ip_address>: For client mode, the server's IP address. For server mode, can be any string.\n");
-        printf("  <mode>: 0 = server, 1 = client\n");
+        help(argv[0]);
         return 1;
     }
 
     const char *ip_address = argv[1];
     int mode = atoi(argv[2]);
 
-    if (mode == 0) {
-        // Server mode
-        printf("Starting in SERVER mode...\n");
-        start_server();
-    } else if (mode == 1) {
-        // Client mode
-        const char *msg = (argc > 3) ? argv[3] : "Hello world !\n";
-        printf("Starting in CLIENT mode. Connecting to %s...\n", ip_address);
+    if (mode == 1) {
+        // First Player
+        const char *msg = (argc == 4) ? argv[3] : "Hello world !\n";
+        printf("Playing as the first player. Connecting to %s...\n", ip_address);
         send_infos(ip_address, msg);
+        
+    } else if (mode == 2) {
+        // Second Player
+        printf("Playing as the second player...\n");
+        start_server();
     } else {
-        printf("Invalid mode. Use 0 for server, 1 for client.\n");
+        printf("Invalid mode. Use 1 for first player, 2 for second player.\n");
         return 1;
     }
 
