@@ -12,6 +12,13 @@ int create_listening_socket() {
         perror("socket");
         exit(-1);
     }
+    
+    int optval = 1;
+    if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0) {
+        perror("setsockopt");
+        close(sock);
+        exit(-1);
+    }
 
     memset(&localAddress, 0x00, addressLength);
     localAddress.sin_family = PF_INET;

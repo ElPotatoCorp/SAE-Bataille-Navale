@@ -186,7 +186,7 @@ void play(int player, const char* ip_address) {
 }
 */
 
-void play(int player, const char* ip_address) {
+void play(int player, const char* ip_address, bool debug) {
     char gridP1[DIM][DIM][3], gridP2[DIM][DIM][3];
     char shotsP1[DIM][DIM][3], shotsP2[DIM][DIM][3];
     initializeGrid(gridP1);
@@ -204,10 +204,13 @@ void play(int player, const char* ip_address) {
 
     int turn;
     if (player == 1) {
-        turn = rand() % 2 + 1;    
+        turn = rand() % 2 + 1;
+
         char turn_str;
         sprintf(&turn_str, "%d", turn);
-        try_send_infos(ip_address, &turn_str);
+
+        printf("Waiting for other player to connect...\n");
+        try_send_infos(ip_address, &turn_str, debug);
         printf("Turn: %d\n", turn);
     }
     else {

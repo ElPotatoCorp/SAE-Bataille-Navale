@@ -5,7 +5,7 @@
 
 void help(char* command)
 {
-    printf("Usage: %s <ip_address> <mode>\n", command);
+    printf("Usage: %s <ip_address> <mode> --debug(optional)\n", command);
     printf("  <ip_address>: IP address of the other player\n");
     printf("  <mode>: 1 = first player, 2 = second player\n");
 }
@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    if (argc != 3 && argc != 4) {
+    if (argc < 3 && argc > 4) {
         help(argv[0]);
         return 1;
     }
@@ -30,7 +30,6 @@ int main(int argc, char *argv[]) {
     }
 
     srand(time(NULL));
-    play(player, ip_address);
-
+    (argc == 4 && strcmp(argv[3], "--debug") == 0) ? play(player, ip_address, true) : play(player, ip_address, false);
     return 0;
 }

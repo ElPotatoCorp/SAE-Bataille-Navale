@@ -6,7 +6,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
-#include <stdbool.h> // Use standard bool type
+#include <stdbool.h>
 #include "server.h"
 #include "client.h"
 
@@ -34,6 +34,6 @@ void placement(char grid[DIM][DIM][3], int player, Ship fleet[]);
 
 bool shoot(char enemyGrid[DIM][DIM][3], char shotsGrid[DIM][DIM][3], int* shipHealth);
 
-void play(int player, const char* ip_address);
+void play(int player, const char* ip_address, bool debug);
 
 #endif // BATTLESHIP_H
