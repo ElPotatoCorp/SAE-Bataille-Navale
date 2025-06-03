@@ -221,7 +221,7 @@ void play(int player, const char* ip_address) {
     int turn;
     if (player == 1) {
         turn = rand() % 2 + 1;    
-        send_infos(ip_address, to_string(turn));
+        try_send_infos(ip_address, to_string(turn));
         printf("Turn: %d\n", turn);
     }
     else {

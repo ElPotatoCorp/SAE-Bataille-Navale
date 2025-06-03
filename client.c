@@ -92,7 +92,7 @@ void send_infos(const char *ip_address, const char *message) {
     close_connection(socket);
 }
 
-void try_send_infos(const char *ip_address, const char *message) {
+void try_send_infos(const char *ip_address, char *message) {
     int socket;
     char recv_buffer[MSG_LEN];
 
