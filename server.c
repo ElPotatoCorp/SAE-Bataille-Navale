@@ -1,9 +1,4 @@
 #include "server.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <arpa/inet.h>
-#include <unistd.h>
 
 int listenSocket = -1;
 
@@ -36,11 +31,15 @@ int create_listening_socket() {
     return sock;
 }
 
-const char* recv_infos() {
+const char *recv_infos() {
     struct sockaddr_in remoteAddress;
     socklen_t addressLength = sizeof(struct sockaddr_in);
     int clientSocket;
-    char recvBuffer[MSG_LEN];
+    char* recvBuffer = malloc(MSG_LEN * sizeof(char));
+    if (!recvBuffer) {
+        perror("malloc");
+        return NULL;
+    }
 
     listenSocket = create_listening_socket();
 
@@ -50,22 +49,23 @@ const char* recv_infos() {
     if (clientSocket < 0) {
         perror("accept");
         close(listenSocket);
-        return;
+        free(recvBuffer);
+        return NULL;
     }
 
     memset(recvBuffer, 0x00, MSG_LEN * sizeof(char));
 
-    int bytesRead = read(clientSocket, recvBuffer, MSG_LEN * sizeof(char));
+    int bytesRead = read(clientSocket, recvBuffer, MSG_LEN - 1);
     if (bytesRead > 0) {
-        if (bytesRead < MSG_LEN) {
-            recvBuffer[bytesRead] = '\0';
-        } else {
-            recvBuffer[MSG_LEN - 1] = '\0';
-        }
+        recvBuffer[bytesRead] = '\0';
     } else if (bytesRead == 0) {
         printf("The socket has been closed by the client!\n");
+        free(recvBuffer);
+        recvBuffer = NULL;
     } else {
         perror("read");
+        free(recvBuffer);
+        recvBuffer = NULL;
     }
 
     close(clientSocket);

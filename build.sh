@@ -1,1 +1,1 @@
-gcc -o battleship battleship.c server.c client.c
+gcc -o main main.c battleship.c server.c client.c

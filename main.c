@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "server.h"
-#include "client.h"
+#include "battleship.h"
 
 void help(char* command)
 {
@@ -23,22 +22,15 @@ int main(int argc, char *argv[]) {
     }
 
     const char *ip_address = argv[1];
-    int mode = atoi(argv[2]);
+    int player = atoi(argv[2]);
 
-    if (mode == 1) {
-        // First Player
-        const char *msg = (argc == 4) ? argv[3] : "Hello world !\n";
-        printf("Playing as the first player. Connecting to %s...\n", ip_address);
-        send_infos(ip_address, msg);
-        
-    } else if (mode == 2) {
-        // Second Player
-        printf("Playing as the second player...\n");
-        start_server();
-    } else {
+    if (player != 1 && player != 2) {
         printf("Invalid mode. Use 1 for first player, 2 for second player.\n");
         return 1;
     }
+
+    srand(time(NULL));
+    play(player, ip_address);
 
     return 0;
 }

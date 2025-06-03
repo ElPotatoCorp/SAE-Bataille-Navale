@@ -1,9 +1,4 @@
 #include "client.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <arpa/inet.h>
-#include <unistd.h>
 
 // Connects to the server at the given IP address, returns the socket descriptor.
 int connect_to_server(const char *server_ip) {
@@ -92,7 +87,7 @@ void send_infos(const char *ip_address, const char *message) {
     close_connection(socket);
 }
 
-void try_send_infos(const char *ip_address, char *message) {
+void try_send_infos(const char *ip_address, const char *message) {
     int socket;
     char recv_buffer[MSG_LEN];
 

@@ -1,11 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <time.h>
-#include <stdbool.h> // Use standard bool type
-#include "server.h"
-#include "client.h"
+#include "battleship.h"
 
 #define DIM 11
 const char* ALPHA[] = { "A","B","C","D","E","F","G","H","I","J" };
@@ -221,7 +214,9 @@ void play(int player, const char* ip_address) {
     int turn;
     if (player == 1) {
         turn = rand() % 2 + 1;    
-        try_send_infos(ip_address, to_string(turn));
+        char turn_str;
+        sprintf(&turn_str, "%d", turn);
+        try_send_infos(ip_address, &turn_str);
         printf("Turn: %d\n", turn);
     }
     else {
@@ -236,6 +231,6 @@ int main(int argc, char *argv[]) {
     const char *ip_address = argv[1];
     int player = atoi(argv[2]);
 
-    play(player, ip_address);
+    
     return 0;
 }
