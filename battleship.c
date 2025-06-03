@@ -1,15 +1,6 @@
 #include "battleship.h"
 
-#define DIM 11
 const char* ALPHA[] = { "A","B","C","D","E","F","G","H","I","J" };
-
-typedef struct {
-    const char* name;
-    char symbol;
-    int size;
-    int remaining;
-    bool active;
-} Ship;
 
 void initializeGrid(char grid[DIM][DIM][3]) {
     strcpy(grid[0][0], " ");
@@ -223,14 +214,4 @@ void play(int player, const char* ip_address) {
         turn = atoi(recv_infos());
         printf("Turn: %d\n", turn);
     }
-}
-
-int main(int argc, char *argv[]) {
-    srand(time(NULL));
-
-    const char *ip_address = argv[1];
-    int player = atoi(argv[2]);
-
-    
-    return 0;
 }

@@ -9,7 +9,7 @@ int connect_to_server(const char *server_ip) {
     sock = socket(PF_INET, SOCK_STREAM, 0);
     if (sock < 0) {
         perror("socket");
-        exit(-1);
+        return -1;
     }
     printf("Socket created successfully! (%d)\n", sock);
 
@@ -20,14 +20,14 @@ int connect_to_server(const char *server_ip) {
     if (inet_aton(server_ip, &server_addr.sin_addr) == 0) {
         fprintf(stderr, "Invalid server IP address!\n");
         close(sock);
-        exit(-2);
+        return -1;
     }
 
-    // Connect to the server
+    // Try to connect to the server
     if (connect(sock, (struct sockaddr *)&server_addr, addr_len) == -1) {
         perror("connect");
         close(sock);
-        exit(-3);
+        return -1; // <--- Don't exit, just return -1
     }
     printf("Connected to server successfully!\n");
     return sock;
