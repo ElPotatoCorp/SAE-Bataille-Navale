@@ -21,7 +21,6 @@ typedef struct {
     bool active;
 } Ship;
 
-// Externally visible functions
 void game_pause();
 
 void initialize_grid(char grid[DIM][DIM]);

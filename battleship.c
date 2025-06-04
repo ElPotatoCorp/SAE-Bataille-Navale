@@ -1,5 +1,6 @@
 #include "battleship.h"
 
+int PLAYER;
 const char *IP_ADDRESS;
 bool DEBUG;
 
@@ -19,7 +20,7 @@ void initialize_grid(char grid[DIM][DIM]) {
 
 void display_grid(char grid[DIM][DIM], bool refresh) {
     if (refresh)
-        printf("\033[%dA", DIM + 2); // Move up (number of lines grid uses)
+        printf("\033[%dA", DIM + 1); // Move up (number of lines grid uses)
     printf("  1 2 3 4 5 6 7 8 9 0");
     for (int i = 0; i < DIM; i++) {
         printf("\n%c ", 'A' + i);
@@ -266,7 +267,7 @@ void action_screen(char grid[DIM][DIM], char shots[DIM][DIM], int *health, bool 
     }
     
     if (health['#'] == 0 && health['@'] == 0 && health['%'] == 0 && health['&'] == 0 && health['$'] == 0) {
-        printf("Player 1 won!\n");
+        printf("Player %d won!\n", PLAYER);
         *end = true;
         if (!try_send_infos(IP_ADDRESS, "END", DEBUG)) game_error("Other player disconnected. Game interrupted.");
     } else {
@@ -284,8 +285,8 @@ void waiting_screen(char grid[DIM][DIM], char grid_enemy[DIM][DIM], char shots_e
     const char *state = recv_infos();
 
     if (strcmp(state, "END") == 0) {
-        display_grid(grid_enemy, false);
-        printf("Player 1 won!\n");
+        display_grid(grid_enemy, true);
+        printf("Player %d won!\n", PLAYER);
         *end = true;
     } else if (strcmp(state, "INVALID") != 0){
         shoot(grid, shots_enemy, health, state[0] - '0', state[1] - '0', !DEBUG);
@@ -293,17 +294,18 @@ void waiting_screen(char grid[DIM][DIM], char grid_enemy[DIM][DIM], char shots_e
     }
 
     if (DEBUG) printf("State: %s\n", state);
-    game_pause();
+    if (!*end) game_pause();
 }
 
 void play(int player, const char* ip_address, bool debug) {
+    PLAYER = player;
     IP_ADDRESS = ip_address;
     DEBUG = debug;
 
     char grid_P1[DIM][DIM], grid_P2[DIM][DIM];
     char shots_P1[DIM][DIM], shots_P2[DIM][DIM];
 
-    if (player == 1) initialize_grid(grid_P1);
+    if (PLAYER == 1) initialize_grid(grid_P1);
     else initialize_grid(grid_P2);
     initialize_grid(shots_P1);
     initialize_grid(shots_P2);
@@ -317,7 +319,7 @@ void play(int player, const char* ip_address, bool debug) {
     memcpy(health_P2, health_P1, sizeof(health_P1));
 
     int turn;
-    if (player == 1) {
+    if (PLAYER == 1) {
         turn = rand() % 2 + 1;
 
         char turn_str = turn + '0';
@@ -333,7 +335,7 @@ void play(int player, const char* ip_address, bool debug) {
     }
 
     char grid_str[DIM * DIM + 1];
-    if (player == 1) {
+    if (PLAYER == 1) {
         placement(grid_P1, 1, fleet_P1);
         grid_to_string(grid_P1, grid_str, sizeof(grid_str));
 
@@ -363,7 +365,7 @@ void play(int player, const char* ip_address, bool debug) {
         printf("Player %d's turn\n", turn);
         if (turn == 1)
         {
-            if (player == 1)
+            if (PLAYER == 1)
             {
                 action_screen(grid_P2, shots_P1, health_P2, &end);
             }
@@ -372,7 +374,7 @@ void play(int player, const char* ip_address, bool debug) {
             }
         }
         else {
-            if (player == 2)
+            if (PLAYER == 2)
             {
                 action_screen(grid_P1, shots_P2, health_P1, &end);
             }
