@@ -2,7 +2,7 @@
 
 int listenSocket = -1;
 
-int create_listening_socket() {
+int create_listening_socket(void) {
     int sock;
     struct sockaddr_in localAddress;
     socklen_t addressLength = sizeof(struct sockaddr_in);
@@ -38,7 +38,7 @@ int create_listening_socket() {
     return sock;
 }
 
-const char *recv_infos() {
+const char *recv_infos(void) {
     struct sockaddr_in remoteAddress;
     socklen_t addressLength = sizeof(struct sockaddr_in);
     int clientSocket;

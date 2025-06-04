@@ -22,15 +22,15 @@ typedef struct {
 } Ship;
 
 // Externally visible functions
-void initializeGrid(char grid[DIM][DIM]);
-void displayGrid(char grid[DIM][DIM]);
-void gridToString(char grid[DIM][DIM], char *buffer, size_t bufsize);
+void initialize_grid(char grid[DIM][DIM]);
+void display_grid(char grid[DIM][DIM]);
+void grid_to_string(char grid[DIM][DIM], char *buffer, size_t bufsize);
 
-int letterToIndex(char letter);
+int letter_to_index(char letter);
 
-bool isValid(int i, int j);
-bool canPlace(int size, int rot, int i, int j, char grid[DIM][DIM]);
-void placeShip(int size, int rot, int i, int j, char symbol, char grid[DIM][DIM]);
+bool is_valid(int i, int j);
+bool can_be_placed(int size, int rot, int i, int j, char grid[DIM][DIM]);
+void place_ship(int size, int rot, int i, int j, char symbol, char grid[DIM][DIM]);
 void placement(char grid[DIM][DIM], int player, Ship fleet[]);
 
 bool shoot(char enemyGrid[DIM][DIM], char shotsGrid[DIM][DIM], int* shipHealth);

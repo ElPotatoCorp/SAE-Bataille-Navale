@@ -1,6 +1,6 @@
 #include "battleship.h"
 
-void initializeGrid(char grid[DIM][DIM]) {
+void initialize_grid(char grid[DIM][DIM]) {
     for (int i = 0; i < DIM; i++) {
         for (int j = 0; j < DIM; j++) {
             grid[i][j] = '-';
@@ -8,7 +8,7 @@ void initializeGrid(char grid[DIM][DIM]) {
     }
 }
 
-void displayGrid(char grid[DIM][DIM]) {
+void display_grid(char grid[DIM][DIM]) {
     printf("  1 2 3 4 5 6 7 8 9 0");
     for (int i = 0; i < DIM; i++) {
         printf("\n%c ", 'A' + i);
@@ -20,37 +20,37 @@ void displayGrid(char grid[DIM][DIM]) {
 }
 
 // I did not verified if it works properly yet.
-void gridToString(char grid[DIM][DIM], char *buffer, size_t bufsize) {
+void grid_to_string(char grid[DIM][DIM], char *buffer, size_t bufsize) {
     int index = 0;
     for (int i = 0; i < DIM; i++) {
         for (int j = 0; j < DIM; j++) {
             if (index < bufsize - 1) { // leave space for '\0'
-                buffer[index++] = grid[i][j];
+                buffer[i * DIM + j] = grid[i][j];
             }
         }
     }
     buffer[index] = '\0';
 }
 
-int letterToIndex(char letter) {
+int letter_to_index(char letter) {
     letter = toupper(letter);
     return (letter >= 'A' && letter <= 'J') ? (letter - 'A') : 0;
 }
 
-bool isValid(int i, int j) {
+bool is_valid(int i, int j) {
     return i >= 0 && i < DIM && j >= 0 && j < DIM;
 }
 
-bool canPlace(int size, int rot, int i, int j, char grid[DIM][DIM]) {
+bool can_be_placed(int size, int rot, int i, int j, char grid[DIM][DIM]) {
     for (int k = 0; k < size; ++k) {
         int x = i + (rot == 3 ? k : rot == 1 ? -k : 0);
         int y = j + (rot == 2 ? k : rot == 4 ? -k : 0);
-        if (!isValid(x, y) || grid[x][y] != '-') return false;
+        if (!is_valid(x, y) || grid[x][y] != '-') return false;
     }
     return true;
 }
 
-void placeShip(int size, int rot, int i, int j, char symbol, char grid[DIM][DIM]) {
+void place_ship(int size, int rot, int i, int j, char symbol, char grid[DIM][DIM]) {
     for (int k = 0; k < size; ++k) {
         int x = i + (rot == 3 ? k : rot == 1 ? -k : 0);
         int y = j + (rot == 2 ? k : rot == 4 ? -k : 0);
@@ -67,7 +67,7 @@ void placement(char grid[DIM][DIM], int player, Ship fleet[]) {
         }
         if (finished) break;
 
-        displayGrid(grid);
+        display_grid(grid);
         printf("Choose a ship (1-5):\n");
         for (int i = 0; i < 5; i++) {
             if (fleet[i].active)
@@ -82,7 +82,7 @@ void placement(char grid[DIM][DIM], int player, Ship fleet[]) {
         printf("Letter (A-J): ");
         char letter;
         scanf(" %c", &letter, 1);
-        int i = letterToIndex(letter);
+        int i = letter_to_index(letter);
 
         printf("Number (0-9): ");
         int j;
@@ -95,22 +95,22 @@ void placement(char grid[DIM][DIM], int player, Ship fleet[]) {
         int rot;
         scanf("%d", &rot);
 
-        if (!canPlace(fleet[choice].size, rot, i, j, grid)) {
+        if (!can_be_placed(fleet[choice].size, rot, i, j, grid)) {
             printf("Invalid placement.\n");
             continue;
         }
 
-        placeShip(fleet[choice].size, rot, i, j, fleet[choice].symbol, grid);
+        place_ship(fleet[choice].size, rot, i, j, fleet[choice].symbol, grid);
         fleet[choice].active = false;
         system("cls || clear");
     }
 }
 
-bool shoot(char enemyGrid[DIM][DIM], char shotsGrid[DIM][DIM], int* shipHealth) {
+bool shoot(char enemy_grid[DIM][DIM], char shots_grid[DIM][DIM], int* ship_health) {
     printf("Letter (A-J): ");
     char letter;
     scanf(" %c", &letter, 1);
-    int i = letterToIndex(letter);
+    int i = letter_to_index(letter);
 
     printf("Number (0-9): ");
     int j;
@@ -119,23 +119,23 @@ bool shoot(char enemyGrid[DIM][DIM], char shotsGrid[DIM][DIM], int* shipHealth) 
     if (j == -1)
         j = 9;
 
-    if (!isValid(i, j)) {
+    if (!is_valid(i, j)) {
         printf("Invalid coordinates.\n");
         return false;
     }
 
-    if (shotsGrid[i][j] != '-') {
+    if (shots_grid[i][j] != '-') {
         printf("You already fired here.\n");
         return false;
     }
 
-    if (enemyGrid[i][j] != '-') {
+    if (enemy_grid[i][j] != '-') {
         printf("Hit!\n");
-        shotsGrid[i][j] = 'X';
-        char symbol = enemyGrid[i][j];
-        enemyGrid[i][j] = 'X';
-        shipHealth[symbol]--;
-        if (shipHealth[symbol] == 0)
+        shots_grid[i][j] = 'X';
+        char symbol = enemy_grid[i][j];
+        enemy_grid[i][j] = 'X';
+        ship_health[symbol]--;
+        if (ship_health[symbol] == 0)
         {
             printf("Ship sunk!\n");
         }
@@ -143,12 +143,12 @@ bool shoot(char enemyGrid[DIM][DIM], char shotsGrid[DIM][DIM], int* shipHealth) 
     }
     else {
         printf("Miss.\n");
-        shotsGrid[i][j] = 'O';
+        shots_grid[i][j] = 'O';
         return false;
     }
 }
 
-
+/*
 void play(int player, const char* ip_address, bool debug) {
     char gridP1[DIM][DIM], gridP2[DIM][DIM];
     char shotsP1[DIM][DIM], shotsP2[DIM][DIM];
@@ -195,27 +195,27 @@ void play(int player, const char* ip_address, bool debug) {
         getchar(); getchar();
     }
 }
+*/
 
-/*
 void play(int player, const char* ip_address, bool debug) {
-    char gridP1[DIM][DIM], gridP2[DIM][DIM];
-    char shotsP1[DIM][DIM], shotsP2[DIM][DIM];
+    char grid_P1[DIM][DIM], grid_P2[DIM][DIM];
+    char shots_P1[DIM][DIM], shots_P2[DIM][DIM];
     if (player == 1) {
-        initializeGrid(gridP1);
-        initializeGrid(shotsP1);
+        initialize_grid(grid_P1);
+        initialize_grid(shots_P1);
     }
     else {
-        initializeGrid(gridP2);
-        initializeGrid(shotsP2);
+        initialize_grid(grid_P2);
+        initialize_grid(shots_P2);
     }
 
-    Ship fleetP1[5] = { {"Carrier",'#',5,5,true},{"Battleship",'@',4,4,true},{"Cruiser",'%',3,3,true},{"Submarine",'&',3,3,true},{"Destroyer",'$',2,2,true} };
-    Ship fleetP2[5];
-    memcpy(fleetP2, fleetP1, sizeof(fleetP1));
+    Ship fleet_P1[5] = { {"Carrier",'#',5,5,true},{"Battleship",'@',4,4,true},{"Cruiser",'%',3,3,true},{"Submarine",'&',3,3,true},{"Destroyer",'$',2,2,true} };
+    Ship fleet_P2[5];
+    memcpy(fleet_P2, fleet_P1, sizeof(fleet_P1));
 
-    int healthP1[128] = { 0 }, healthP2[128] = { 0 };
-    healthP1['#'] = 5; healthP1['@'] = 4; healthP1['%'] = 3; healthP1['&'] = 3; healthP1['$'] = 2;
-    memcpy(healthP2, healthP1, sizeof(healthP1));
+    int health_P1[128] = { 0 }, health_P2[128] = { 0 };
+    health_P1['#'] = 5; health_P1['@'] = 4; health_P1['%'] = 3; health_P1['&'] = 3; health_P1['$'] = 2;
+    memcpy(health_P2, health_P1, sizeof(health_P1));
 
     int turn;
     if (player == 1) {
@@ -229,15 +229,26 @@ void play(int player, const char* ip_address, bool debug) {
         printf("Turn: %d\n", turn);
     }
     else {
+        printf("Waiting for other player to connect...\n");
         turn = atoi(recv_infos());
         printf("Turn: %d\n", turn);
     }
 
-    if (player == 1) {
+    char *grid_str;
+    grid_to_string(grid_P1, grid_str, sizeof(grid_P1));
+    printf("%s\n", grid_str);
+
+    /*if (player == 1) {
         placement(gridP1, 1, fleetP1);
-        try_send_infos(gridP1);
+        printf("Waiting for other player...\n");
+        try_send_infos(ip_address, gridP1, debug);
         recv_infos();
     }
+    else {
+        placement(gridP2, 2, fleetP2);
+        printf("Waiting for other player...\n");
+        recv_infos();
+        send_infos(ip_address, gridP2, debug);
+    }*/
 
 }
-*/
