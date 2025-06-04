@@ -47,21 +47,41 @@ void string_to_grid(const char *buffer, char grid[DIM][DIM]) {
     }
 }
 
+
 int *get_coord(void) {
     int *coord = malloc(2 * sizeof(int));
+    char line[128];
+    char letter = 0;
+    int number = -1;
 
-    printf("Letter (A-J): ");
-    coord[0] = toupper(getchar()) - 'A';
-    getchar();
+    while (1) {
+        printf("Enter coordinates (Letter A-J and Number 0-9, e.g. B 7): ");
+        if (!fgets(line, sizeof(line), stdin))
+            continue;
 
-    printf("Number (0-9): ");
-    coord[1] = getchar() - '1';
-    if (coord[1] == -1) coord[1] = 9;
-    getchar();
+        if (sscanf(line, " %c %d", &letter, &number) == 2 ||
+            sscanf(line, " %c%d", &letter, &number) == 2) {
+            letter = toupper(letter);
+            if (letter >= 'A' && letter <= 'J') {
+                coord[0] = letter - 'A';
+            } else {
+                printf("Invalid letter. Please enter a letter from A to J.\n");
+                continue;
+            }
 
-    // Clear input buffer
-    char dummy[128];
-    fgets(dummy, sizeof(dummy), stdin);
+            if (number == 0) {
+                coord[1] = 9;
+            } else if (number >= 1 && number <= 9) {
+                coord[1] = number - 1;
+            } else {
+                printf("Invalid number. Please enter a number from 0 to 9.\n");
+                continue;
+            }
+            break;
+        } else {
+            printf("Invalid input. Please enter a letter (A-J) and a number (0-9).\n");
+        }
+    }
 
     return coord;
 }
@@ -182,7 +202,7 @@ void placement(char grid[DIM][DIM], int player, Ship fleet[]) {
 
         place_ship(fleet[choice].size, rot, x, y, fleet[choice].symbol, grid);
         fleet[choice].active = false;
-        system("cls || clear");
+        system("clear");
 
         // Check if all ships placed
         bool finished = true;
@@ -194,6 +214,8 @@ void placement(char grid[DIM][DIM], int player, Ship fleet[]) {
 }
 
 bool shoot(char enemy_grid[DIM][DIM], char shots_grid[DIM][DIM], int* ship_health, int x, int y, bool mute) {
+    if (DEBUG) printf("Shooting at (%d, %d)\n", x, y);
+
     if (shots_grid[x][y] != '-') {
         if (!mute) printf("You already fired here.\n");
         return false;
@@ -201,8 +223,8 @@ bool shoot(char enemy_grid[DIM][DIM], char shots_grid[DIM][DIM], int* ship_healt
 
     if (enemy_grid[x][y] != '-') {
         if (!mute) printf("Hit!\n");
-        shots_grid[x][y] = 'X';
         char symbol = enemy_grid[x][y];
+        shots_grid[x][y] = 'X';
         enemy_grid[x][y] = 'X';
         ship_health[symbol]--;
         if (ship_health[symbol] == 0)
@@ -266,8 +288,8 @@ void waiting_screen(char grid[DIM][DIM], char grid_enemy[DIM][DIM], char shots_e
         printf("Player 1 won!\n");
         *end = true;
     } else if (strcmp(state, "INVALID") != 0){
-        shoot(grid, shots_enemy, health, atoi(&state[0]), atoi(&state[1]), true);
-        display_grid(grid, false);
+        shoot(grid, shots_enemy, health, state[0] - '0', state[1] - '0', !DEBUG);
+        display_grid(grid, !DEBUG);
     }
 
     if (DEBUG) printf("State: %s\n", state);
@@ -315,7 +337,7 @@ void play(int player, const char* ip_address, bool debug) {
         placement(grid_P1, 1, fleet_P1);
         grid_to_string(grid_P1, grid_str, sizeof(grid_str));
 
-        system("cls || clear");
+        system("clear");
         printf("Waiting for other player...\n");
 
         if (!try_send_infos(IP_ADDRESS, grid_str, DEBUG)) game_error("Other player disconnected. Game interrupted.");
@@ -326,7 +348,7 @@ void play(int player, const char* ip_address, bool debug) {
         placement(grid_P2, 2, fleet_P2);
         grid_to_string(grid_P2, grid_str, sizeof(grid_str));
 
-        system("cls || clear");
+        system("clear");
         printf("Waiting for other player...\n");
 
         string_to_grid(recv_infos(), grid_P1);
@@ -337,7 +359,7 @@ void play(int player, const char* ip_address, bool debug) {
     bool end = false;
     while (!end)
     {
-        system("cls || clear");
+        system("clear");
         printf("Player %d's turn\n", turn);
         if (turn == 1)
         {
