@@ -25,6 +25,7 @@ typedef struct {
 void initialize_grid(char grid[DIM][DIM]);
 void display_grid(char grid[DIM][DIM]);
 void grid_to_string(char grid[DIM][DIM], char *buffer, size_t bufsize);
+void string_to_grid(const char *buffer, char grid[DIM][DIM]);
 
 int letter_to_index(char letter);
 

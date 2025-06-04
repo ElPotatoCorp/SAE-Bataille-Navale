@@ -62,7 +62,6 @@ void receive_message(int socket, char *buffer, int bufsize, bool debug) {
         case 0:
             if (debug) fprintf(stderr, "Socket closed by server while receiving.\n");
             close(socket);
-            exit(0);
         default:
             buffer[bytes_received] = '\0';
             if (debug) printf("Message received from server: %s (%d bytes)\n", buffer, bytes_received);

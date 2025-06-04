@@ -48,9 +48,7 @@ const char *recv_infos(void) {
         return NULL;
     }
 
-    listenSocket = create_listening_socket();
-
-    printf("Waiting for other player...\n");
+    listenSocket = create_listening_socket();   
 
     clientSocket = accept(listenSocket, (struct sockaddr *)&remoteAddress, &addressLength);
     if (clientSocket < 0) {
