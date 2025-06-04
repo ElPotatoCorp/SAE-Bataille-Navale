@@ -16,10 +16,10 @@
 
 int connect_to_server(const char *server_ip, bool debug);
 void send_message(int socket, const char *message, bool debug);
-void receive_message(int socket, char *buffer, int bufsize, bool debug);
+int receive_message(int socket, char *buffer, int bufsize, bool debug);
 void close_connection(int socket, bool debug);
 
 void send_infos(const char *ip_address, const char *message, bool debug);
-void try_send_infos(const char *ip_address, const char *message, bool debug);
+bool try_send_infos(const char *ip_address, const char *message, bool debug);
 
 #endif // CLIENT_H

@@ -63,6 +63,11 @@ const char *recv_infos(void) {
     int bytesRead = read(clientSocket, recvBuffer, MSG_LEN - 1);
     if (bytesRead > 0) {
         recvBuffer[bytesRead] = '\0';
+        
+        const char *feedback = "OK";
+        if (write(clientSocket, feedback, strlen(feedback)) < 0) {
+            perror("write (feedback)");
+        }
     } else if (bytesRead == 0) {
         printf("The socket has been closed by the client!\n");
         free(recvBuffer);

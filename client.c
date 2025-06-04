@@ -52,19 +52,21 @@ void send_message(int socket, const char *message, bool debug) {
 }
 
 // Receives a message from the server.
-void receive_message(int socket, char *buffer, int bufsize, bool debug) {
+int receive_message(int socket, char *buffer, int bufsize, bool debug) {
     int bytes_received = read(socket, buffer, bufsize);
     switch (bytes_received) {
         case -1:
             perror("read");
             close(socket);
-            exit(-5);
+            return -1; // Server error
         case 0:
             if (debug) fprintf(stderr, "Socket closed by server while receiving.\n");
             close(socket);
+            return 0; // Connection closed/denied
         default:
             buffer[bytes_received] = '\0';
             if (debug) printf("Message received from server: %s (%d bytes)\n", buffer, bytes_received);
+            return 1; // Success
     }
 }
 
@@ -86,7 +88,7 @@ void send_infos(const char *ip_address, const char *message, bool debug) {
     close_connection(socket, debug);
 }
 
-void try_send_infos(const char *ip_address, const char *message, bool debug) {
+bool try_send_infos(const char *ip_address, const char *message, bool debug) {
     int socket;
     char recv_buffer[MSG_LEN];
 
@@ -99,8 +101,12 @@ void try_send_infos(const char *ip_address, const char *message, bool debug) {
         sleep(1);
     }
 
+    bool success;
     send_message(socket, message, debug);
-    receive_message(socket, recv_buffer, MSG_LEN - 1, debug);
+    if (receive_message(socket, recv_buffer, MSG_LEN - 1, debug) == -1) success = false;
+    else success = true;
 
     close_connection(socket, debug);
+
+    return success;
 }

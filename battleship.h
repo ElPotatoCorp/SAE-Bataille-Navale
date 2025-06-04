@@ -22,19 +22,27 @@ typedef struct {
 } Ship;
 
 // Externally visible functions
+void game_pause();
+
 void initialize_grid(char grid[DIM][DIM]);
-void display_grid(char grid[DIM][DIM]);
+void display_grid(char grid[DIM][DIM], bool refresh);
 void grid_to_string(char grid[DIM][DIM], char *buffer, size_t bufsize);
 void string_to_grid(const char *buffer, char grid[DIM][DIM]);
 
-int letter_to_index(char letter);
+int *get_coord(void);
+char *coord_to_string(int *coord);
 
 bool is_valid(int i, int j);
 bool can_be_placed(int size, int rot, int i, int j, char grid[DIM][DIM]);
 void place_ship(int size, int rot, int i, int j, char symbol, char grid[DIM][DIM]);
 void placement(char grid[DIM][DIM], int player, Ship fleet[]);
 
-bool shoot(char enemyGrid[DIM][DIM], char shotsGrid[DIM][DIM], int* shipHealth);
+bool shoot(char enemyGrid[DIM][DIM], char shotsGrid[DIM][DIM], int* shipHealth, int x, int y, bool mute);
+
+void game_error(const char *message);
+
+void action_screen(char grid[DIM][DIM], char shots[DIM][DIM], int *health, bool *end);
+void waiting_screen(char grid[DIM][DIM], char grid_enemy[DIM][DIM], char shots[DIM][DIM], int *health, bool *end);
 
 void play(int player, const char* ip_address, bool debug);
 

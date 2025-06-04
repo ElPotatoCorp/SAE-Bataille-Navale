@@ -30,6 +30,8 @@ int main(int argc, char *argv[]) {
     }
 
     srand(time(NULL));
+    system("cls || clear"); 
+
     (argc == 4 && strcmp(argv[3], "--debug") == 0) ? play(player, ip_address, true) : play(player, ip_address, false);
     return 0;
 }

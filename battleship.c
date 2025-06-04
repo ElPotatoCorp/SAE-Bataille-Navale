@@ -1,5 +1,14 @@
 #include "battleship.h"
 
+const char *IP_ADDRESS;
+bool DEBUG;
+
+void game_pause()
+{
+    printf("Press enter to continue...");
+    while (getchar() != '\n');
+}
+
 void initialize_grid(char grid[DIM][DIM]) {
     for (int i = 0; i < DIM; i++) {
         for (int j = 0; j < DIM; j++) {
@@ -8,7 +17,9 @@ void initialize_grid(char grid[DIM][DIM]) {
     }
 }
 
-void display_grid(char grid[DIM][DIM]) {
+void display_grid(char grid[DIM][DIM], bool refresh) {
+    if (refresh)
+        printf("\033[%dA", DIM + 2); // Move up (number of lines grid uses)
     printf("  1 2 3 4 5 6 7 8 9 0");
     for (int i = 0; i < DIM; i++) {
         printf("\n%c ", 'A' + i);
@@ -36,9 +47,32 @@ void string_to_grid(const char *buffer, char grid[DIM][DIM]) {
     }
 }
 
-int letter_to_index(char letter) {
-    letter = toupper(letter);
-    return (letter >= 'A' && letter <= 'J') ? (letter - 'A') : 0;
+int *get_coord(void) {
+    int *coord = malloc(2 * sizeof(int));
+
+    printf("Letter (A-J): ");
+    coord[0] = toupper(getchar()) - 'A';
+    getchar();
+
+    printf("Number (0-9): ");
+    coord[1] = getchar() - '1';
+    if (coord[1] == -1) coord[1] = 9;
+    getchar();
+
+    // Clear input buffer
+    char dummy[128];
+    fgets(dummy, sizeof(dummy), stdin);
+
+    return coord;
+}
+
+char *coord_to_string(int *coord) {
+    char *coord_str = malloc(3 * sizeof(char));
+    coord_str[0] = '0' + coord[0];
+    coord_str[1] = '0' + coord[1];
+    coord_str[2] = '\0';
+
+    return coord_str;   
 }
 
 bool is_valid(int i, int j) {
@@ -64,95 +98,186 @@ void place_ship(int size, int rot, int i, int j, char symbol, char grid[DIM][DIM
 
 void placement(char grid[DIM][DIM], int player, Ship fleet[]) {
     printf("Placement of Player %d's ships\n", player);
-    while (true) {
-        bool finished = true;
-        for (int k = 0; k < 5; k++) {
-            if (fleet[k].active) finished = false;
-        }
-        if (finished) break;
 
-        display_grid(grid);
+    while (1) {
+        display_grid(grid, false);
+
+        // Print available ships
         printf("Choose a ship (1-5):\n");
         for (int i = 0; i < 5; i++) {
             if (fleet[i].active)
                 printf("%d. %s - size: %d - symbol: '%c'\n", i + 1, fleet[i].name, fleet[i].size, fleet[i].symbol);
         }
+        printf("Format: <ship> <letter> <number> <rotation>\n");
+        printf("Example: 2 B 7 1\n");
 
-        int choice;
-        scanf("%d", &choice);
-        choice--;
-        if (choice < 0 || choice >= 5 || !fleet[choice].active) continue;
+        int choice = -1, x = -1, y = -1, rot = -1;
+        char letter = 0;
+        char line[128];
 
-        printf("Letter (A-J): ");
-        char letter;
-        scanf(" %c", &letter, 1);
-        int i = letter_to_index(letter);
+        // Prompt for all values at once
+        printf("Enter placement: ");
+        if (!fgets(line, sizeof(line), stdin)) continue;
 
-        printf("Number (0-9): ");
-        int j;
-        scanf("%d", &j);
-        j -= 1;
-        if (j == -1)
-            j = 9;
+        // Try to parse all values at once (case-insensitive for letter)
+        if (sscanf(line, "%d %c %d %d", &choice, &letter, &y, &rot) == 4) {
+            choice -= 1;
+            x = toupper(letter) - 'A';
+            if (y == 0) y = 9; else y -= 1;
+        } else {
+            // Fallback: ask for each value individually if missing or invalid
 
-        printf("Rotation (1=north, 2=east, 3=south, 4=west): ");
-        int rot;
-        scanf("%d", &rot);
+            // Reset values
+            choice = -1, x = -1, y = -1, rot = -1;
 
-        if (!can_be_placed(fleet[choice].size, rot, i, j, grid)) {
+            // Ship number
+            while (choice < 0 || choice >= 5 || !fleet[choice].active) {
+                printf("Ship number [1-5]: ");
+                if (!fgets(line, sizeof(line), stdin)) continue;
+                if (sscanf(line, "%d", &choice) == 1) {
+                    choice -= 1;
+                } else if (isdigit(line[0])) {
+                    choice = line[0] - '1';
+                } else {
+                    continue;
+                }
+                if (choice < 0 || choice >= 5 || !fleet[choice].active) printf("Invalid ship. Try again.\n");
+            }
+
+            // Letter
+            while (x < 0 || x >= DIM) {
+                printf("Letter (A-J): ");
+                if (!fgets(line, sizeof(line), stdin)) continue;
+                if (sscanf(line, " %c", &letter) == 1 && isalpha(letter)) {
+                    x = toupper(letter) - 'A';
+                }
+                if (x < 0 || x >= DIM) printf("Invalid letter. Try again.\n");
+            }
+
+            // Number
+            while (y < 0 || y >= DIM) {
+                printf("Number (0-9): ");
+                if (!fgets(line, sizeof(line), stdin)) continue;
+                if (sscanf(line, "%d", &y) != 1) {
+                    if (isdigit(line[0])) y = line[0] - '0';
+                    else continue;
+                }
+                if (y == 0) y = 9; else y -= 1;
+                if (y < 0 || y >= DIM) printf("Invalid number. Try again.\n");
+            }
+
+            // Rotation
+            while (rot < 1 || rot > 4) {
+                printf("Rotation (1=north, 2=east, 3=south, 4=west): ");
+                if (!fgets(line, sizeof(line), stdin)) continue;
+                sscanf(line, "%d", &rot);
+                if (rot < 1 || rot > 4) printf("Invalid rotation. Try again.\n");
+            }
+        }
+
+        if (!can_be_placed(fleet[choice].size, rot, x, y, grid)) {
             printf("Invalid placement.\n");
             continue;
         }
 
-        place_ship(fleet[choice].size, rot, i, j, fleet[choice].symbol, grid);
+        place_ship(fleet[choice].size, rot, x, y, fleet[choice].symbol, grid);
         fleet[choice].active = false;
         system("cls || clear");
+
+        // Check if all ships placed
+        bool finished = true;
+        for (int k = 0; k < 5; k++) {
+            if (fleet[k].active) finished = false;
+        }
+        if (finished) break;
     }
 }
 
-bool shoot(char enemy_grid[DIM][DIM], char shots_grid[DIM][DIM], int* ship_health) {
-    printf("Letter (A-J): ");
-    char letter;
-    scanf(" %c", &letter, 1);
-    int i = letter_to_index(letter);
-
-    printf("Number (0-9): ");
-    int j;
-    scanf("%d", &j);
-    j -= 1;
-    if (j == -1)
-        j = 9;
-
-    if (!is_valid(i, j)) {
-        printf("Invalid coordinates.\n");
+bool shoot(char enemy_grid[DIM][DIM], char shots_grid[DIM][DIM], int* ship_health, int x, int y, bool mute) {
+    if (shots_grid[x][y] != '-') {
+        if (!mute) printf("You already fired here.\n");
         return false;
     }
 
-    if (shots_grid[i][j] != '-') {
-        printf("You already fired here.\n");
-        return false;
-    }
-
-    if (enemy_grid[i][j] != '-') {
-        printf("Hit!\n");
-        shots_grid[i][j] = 'X';
-        char symbol = enemy_grid[i][j];
-        enemy_grid[i][j] = 'X';
+    if (enemy_grid[x][y] != '-') {
+        if (!mute) printf("Hit!\n");
+        shots_grid[x][y] = 'X';
+        char symbol = enemy_grid[x][y];
+        enemy_grid[x][y] = 'X';
         ship_health[symbol]--;
         if (ship_health[symbol] == 0)
         {
-            printf("Ship sunk!\n");
+            if (!mute) printf("Ship sunk!\n");
         }
         return true;
     }
     else {
-        printf("Miss.\n");
-        shots_grid[i][j] = 'O';
+        if (!mute) printf("Miss.\n");
+        enemy_grid[x][y] = 'O';
+        shots_grid[x][y] = 'O';
         return false;
     }
 }
 
+void game_error(const char *message)
+{
+    printf("%s\n", message);
+    exit(0);
+}
+
+void action_screen(char grid[DIM][DIM], char shots[DIM][DIM], int *health, bool *end) {
+    printf("Your shots grid:\n");
+    display_grid(shots, false);
+
+    int *coord = get_coord();
+    if (!is_valid(coord[0], coord[1])) {
+        printf("Invalid coordinates.\n");
+        game_pause();
+
+        if (!try_send_infos(IP_ADDRESS, "INVALID", DEBUG)) game_error("Other player disconnected. Game interrupted.");
+
+        free(coord);
+        return;
+    }
+    else {
+        shoot(grid, shots, health, coord[0], coord[1], false);
+    }
+    
+    if (health['#'] == 0 && health['@'] == 0 && health['%'] == 0 && health['&'] == 0 && health['$'] == 0) {
+        printf("Player 1 won!\n");
+        *end = true;
+        if (!try_send_infos(IP_ADDRESS, "END", DEBUG)) game_error("Other player disconnected. Game interrupted.");
+    } else {
+        game_pause();
+        if (!try_send_infos(IP_ADDRESS, coord_to_string(coord), DEBUG)) game_error("Other player disconnected. Game interrupted.");
+    }
+
+    free(coord);
+}
+
+void waiting_screen(char grid[DIM][DIM], char grid_enemy[DIM][DIM], char shots_enemy[DIM][DIM], int *health, bool *end) {
+    printf("Your fleet grid:\n");
+    display_grid(grid, false);
+
+    const char *state = recv_infos();
+
+    if (strcmp(state, "END") == 0) {
+        display_grid(grid_enemy, false);
+        printf("Player 1 won!\n");
+        *end = true;
+    } else if (strcmp(state, "INVALID") != 0){
+        shoot(grid, shots_enemy, health, atoi(&state[0]), atoi(&state[1]), true);
+        display_grid(grid, false);
+    }
+
+    if (DEBUG) printf("State: %s\n", state);
+    game_pause();
+}
+
 void play(int player, const char* ip_address, bool debug) {
+    IP_ADDRESS = ip_address;
+    DEBUG = debug;
+
     char grid_P1[DIM][DIM], grid_P2[DIM][DIM];
     char shots_P1[DIM][DIM], shots_P2[DIM][DIM];
 
@@ -173,11 +298,10 @@ void play(int player, const char* ip_address, bool debug) {
     if (player == 1) {
         turn = rand() % 2 + 1;
 
-        char turn_str;
-        sprintf(&turn_str, "%d", turn);
+        char turn_str = turn + '0';
 
         printf("Waiting for other player to connect...\n");
-        try_send_infos(ip_address, &turn_str, debug);
+        if (!try_send_infos(IP_ADDRESS, &turn_str, DEBUG)) game_error("Other player disconnected. Game interrupted.");
         printf("Turn: %d\n", turn);
     }
     else {
@@ -191,21 +315,49 @@ void play(int player, const char* ip_address, bool debug) {
         placement(grid_P1, 1, fleet_P1);
         grid_to_string(grid_P1, grid_str, sizeof(grid_str));
 
+        system("cls || clear");
         printf("Waiting for other player...\n");
-        try_send_infos(ip_address, grid_str, debug);
-        string_to_grid(recv_infos(), grid_P2);
 
-        display_grid(grid_P2);
+        if (!try_send_infos(IP_ADDRESS, grid_str, DEBUG)) game_error("Other player disconnected. Game interrupted.");
+        string_to_grid(recv_infos(), grid_P2);
+        if (DEBUG) game_pause();
     }
     else {
         placement(grid_P2, 2, fleet_P2);
         grid_to_string(grid_P2, grid_str, sizeof(grid_str));
 
+        system("cls || clear");
         printf("Waiting for other player...\n");
-        string_to_grid(recv_infos(), grid_P1);
-        send_infos(ip_address, grid_str, debug);
 
-        display_grid(grid_P1);
+        string_to_grid(recv_infos(), grid_P1);
+        if (!try_send_infos(IP_ADDRESS, grid_str, DEBUG)) game_error("Other player disconnected. Game interrupted.");
+        if (DEBUG) game_pause();
     }
 
+    bool end = false;
+    while (!end)
+    {
+        system("cls || clear");
+        printf("Player %d's turn\n", turn);
+        if (turn == 1)
+        {
+            if (player == 1)
+            {
+                action_screen(grid_P2, shots_P1, health_P2, &end);
+            }
+            else {
+                waiting_screen(grid_P2, grid_P1, shots_P1, health_P2, &end);
+            }
+        }
+        else {
+            if (player == 2)
+            {
+                action_screen(grid_P1, shots_P2, health_P1, &end);
+            }
+            else {
+                waiting_screen(grid_P1, grid_P2, shots_P2, health_P1, &end);
+            }
+        }
+        turn = (turn == 1) ? 2 : 1;
+    }
 }
