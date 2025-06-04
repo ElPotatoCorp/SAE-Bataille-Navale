@@ -1,62 +1,64 @@
 #include "battleship.h"
 
-const char* ALPHA[] = { "A","B","C","D","E","F","G","H","I","J" };
-
-void initializeGrid(char grid[DIM][DIM][3]) {
-    strcpy(grid[0][0], " ");
-    for (int i = 1; i < DIM; i++) {
-        snprintf(grid[0][i], 3, "%d", i);
-        strcpy(grid[i][0], ALPHA[i - 1]);
-    }
-    for (int i = 1; i < DIM; i++) {
-        for (int j = 1; j < DIM; j++) {
-            strcpy(grid[i][j], "-");
+void initializeGrid(char grid[DIM][DIM]) {
+    for (int i = 0; i < DIM; i++) {
+        for (int j = 0; j < DIM; j++) {
+            grid[i][j] = '-';
         }
     }
 }
 
-void displayGrid(char grid[DIM][DIM][3], bool hide) {
+void displayGrid(char grid[DIM][DIM]) {
+    printf("  1 2 3 4 5 6 7 8 9 0");
+    for (int i = 0; i < DIM; i++) {
+        printf("\n%c ", 'A' + i);
+        for (int j = 0; j < DIM; j++) {
+            printf("%c ", grid[i][j]);
+        }
+    }
+    printf("\n");
+}
+
+// I did not verified if it works properly yet.
+void gridToString(char grid[DIM][DIM], char *buffer, size_t bufsize) {
+    int index = 0;
     for (int i = 0; i < DIM; i++) {
         for (int j = 0; j < DIM; j++) {
-            if (hide && (strcmp(grid[i][j], "#") == 0 || strcmp(grid[i][j], "@") == 0 ||
-                strcmp(grid[i][j], "%") == 0 || strcmp(grid[i][j], "&") == 0 ||
-                strcmp(grid[i][j], "$") == 0))
-                printf("- ");
-            else
-                printf("%s ", grid[i][j]);
+            if (index < bufsize - 1) { // leave space for '\0'
+                buffer[index++] = grid[i][j];
+            }
         }
-        printf("\n");
     }
+    buffer[index] = '\0';
 }
 
 int letterToIndex(char letter) {
     letter = toupper(letter);
-    return (letter >= 'A' && letter <= 'J') ? (letter - 'A' + 1) : 0;
+    return (letter >= 'A' && letter <= 'J') ? (letter - 'A') : 0;
 }
 
 bool isValid(int i, int j) {
-    return i >= 1 && i < DIM && j >= 1 && j < DIM;
+    return i >= 0 && i < DIM && j >= 0 && j < DIM;
 }
 
-bool canPlace(int size, int rot, int i, int j, char grid[DIM][DIM][3]) {
+bool canPlace(int size, int rot, int i, int j, char grid[DIM][DIM]) {
     for (int k = 0; k < size; ++k) {
         int x = i + (rot == 3 ? k : rot == 1 ? -k : 0);
         int y = j + (rot == 2 ? k : rot == 4 ? -k : 0);
-        if (!isValid(x, y) || strcmp(grid[x][y], "-") != 0) return false;
+        if (!isValid(x, y) || grid[x][y] != '-') return false;
     }
     return true;
 }
 
-void placeShip(int size, int rot, int i, int j, char symbol, char grid[DIM][DIM][3]) {
+void placeShip(int size, int rot, int i, int j, char symbol, char grid[DIM][DIM]) {
     for (int k = 0; k < size; ++k) {
         int x = i + (rot == 3 ? k : rot == 1 ? -k : 0);
         int y = j + (rot == 2 ? k : rot == 4 ? -k : 0);
-        grid[x][y][0] = symbol;
-        grid[x][y][1] = '\0';
+        grid[x][y] = symbol;
     }
 }
 
-void placement(char grid[DIM][DIM][3], int player, Ship fleet[]) {
+void placement(char grid[DIM][DIM], int player, Ship fleet[]) {
     printf("Placement of Player %d's ships\n", player);
     while (true) {
         bool finished = true;
@@ -65,7 +67,7 @@ void placement(char grid[DIM][DIM][3], int player, Ship fleet[]) {
         }
         if (finished) break;
 
-        displayGrid(grid, false);
+        displayGrid(grid);
         printf("Choose a ship (1-5):\n");
         for (int i = 0; i < 5; i++) {
             if (fleet[i].active)
@@ -82,9 +84,12 @@ void placement(char grid[DIM][DIM][3], int player, Ship fleet[]) {
         scanf(" %c", &letter, 1);
         int i = letterToIndex(letter);
 
-        printf("Number (1-10): ");
+        printf("Number (0-9): ");
         int j;
         scanf("%d", &j);
+        j -= 1;
+        if (j == -1)
+            j = 9;
 
         printf("Rotation (1=north, 2=east, 3=south, 4=west): ");
         int rot;
@@ -101,46 +106,52 @@ void placement(char grid[DIM][DIM][3], int player, Ship fleet[]) {
     }
 }
 
-bool shoot(char enemyGrid[DIM][DIM][3], char shotsGrid[DIM][DIM][3], int* shipHealth) {
+bool shoot(char enemyGrid[DIM][DIM], char shotsGrid[DIM][DIM], int* shipHealth) {
     printf("Letter (A-J): ");
     char letter;
     scanf(" %c", &letter, 1);
     int i = letterToIndex(letter);
 
-    printf("Number (1-10): ");
+    printf("Number (0-9): ");
     int j;
     scanf("%d", &j);
+    j -= 1;
+    if (j == -1)
+        j = 9;
 
     if (!isValid(i, j)) {
         printf("Invalid coordinates.\n");
         return false;
     }
 
-    if (strcmp(shotsGrid[i][j], "-") != 0) {
+    if (shotsGrid[i][j] != '-') {
         printf("You already fired here.\n");
         return false;
     }
 
-    if (strcmp(enemyGrid[i][j], "-") != 0 && strcmp(enemyGrid[i][j], "X") != 0) {
+    if (enemyGrid[i][j] != '-') {
         printf("Hit!\n");
-        shotsGrid[i][j][0] = 'X'; shotsGrid[i][j][1] = '\0';
-        char symbol = enemyGrid[i][j][0];
-        enemyGrid[i][j][0] = 'X'; enemyGrid[i][j][1] = '\0';
-        shipHealth[symbol]++;
-        if (shipHealth[symbol] == 0) printf("Ship sunk!\n");
+        shotsGrid[i][j] = 'X';
+        char symbol = enemyGrid[i][j];
+        enemyGrid[i][j] = 'X';
+        shipHealth[symbol]--;
+        if (shipHealth[symbol] == 0)
+        {
+            printf("Ship sunk!\n");
+        }
         return true;
     }
     else {
         printf("Miss.\n");
-        shotsGrid[i][j][0] = 'O'; shotsGrid[i][j][1] = '\0';
+        shotsGrid[i][j] = 'O';
         return false;
     }
 }
 
-/*
-void play(int player, const char* ip_address) {
-    char gridP1[DIM][DIM][3], gridP2[DIM][DIM][3];
-    char shotsP1[DIM][DIM][3], shotsP2[DIM][DIM][3];
+
+void play(int player, const char* ip_address, bool debug) {
+    char gridP1[DIM][DIM], gridP2[DIM][DIM];
+    char shotsP1[DIM][DIM], shotsP2[DIM][DIM];
     initializeGrid(gridP1);
     initializeGrid(gridP2);
     initializeGrid(shotsP1);
@@ -163,7 +174,7 @@ void play(int player, const char* ip_address) {
         printf("Player %d's turn\n", turn);
         if (turn == 1) {
             printf("Your shots grid:\n");
-            displayGrid(shotsP1, false);
+            displayGrid(shotsP1);
             shoot(gridP2, shotsP1, healthP2);
             if (healthP2['#'] == 0 && healthP2['@'] == 0 && healthP2['%'] == 0 && healthP2['&'] == 0 && healthP2['$'] == 0) {
                 printf("Player 1 won!\n");
@@ -172,7 +183,7 @@ void play(int player, const char* ip_address) {
         }
         else {
             printf("Your shots grid:\n");
-            displayGrid(shotsP2, false);
+            displayGrid(shotsP2);
             shoot(gridP1, shotsP2, healthP1);
             if (healthP1['#'] == 0 && healthP1['@'] == 0 && healthP1['%'] == 0 && healthP1['&'] == 0 && healthP1['$'] == 0) {
                 printf("Player 2 won!\n");
@@ -184,15 +195,19 @@ void play(int player, const char* ip_address) {
         getchar(); getchar();
     }
 }
-*/
 
+/*
 void play(int player, const char* ip_address, bool debug) {
-    char gridP1[DIM][DIM][3], gridP2[DIM][DIM][3];
-    char shotsP1[DIM][DIM][3], shotsP2[DIM][DIM][3];
-    initializeGrid(gridP1);
-    initializeGrid(gridP2);
-    initializeGrid(shotsP1);
-    initializeGrid(shotsP2);
+    char gridP1[DIM][DIM], gridP2[DIM][DIM];
+    char shotsP1[DIM][DIM], shotsP2[DIM][DIM];
+    if (player == 1) {
+        initializeGrid(gridP1);
+        initializeGrid(shotsP1);
+    }
+    else {
+        initializeGrid(gridP2);
+        initializeGrid(shotsP2);
+    }
 
     Ship fleetP1[5] = { {"Carrier",'#',5,5,true},{"Battleship",'@',4,4,true},{"Cruiser",'%',3,3,true},{"Submarine",'&',3,3,true},{"Destroyer",'$',2,2,true} };
     Ship fleetP2[5];
@@ -217,4 +232,12 @@ void play(int player, const char* ip_address, bool debug) {
         turn = atoi(recv_infos());
         printf("Turn: %d\n", turn);
     }
+
+    if (player == 1) {
+        placement(gridP1, 1, fleetP1);
+        try_send_infos(gridP1);
+        recv_infos();
+    }
+
 }
+*/

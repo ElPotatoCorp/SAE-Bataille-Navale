@@ -10,7 +10,7 @@
 #include "server.h"
 #include "client.h"
 
-#define DIM 11
+#define DIM 10
 
 // Ship struct definition
 typedef struct {
@@ -22,17 +22,18 @@ typedef struct {
 } Ship;
 
 // Externally visible functions
-void initializeGrid(char grid[DIM][DIM][3]);
-void displayGrid(char grid[DIM][DIM][3], bool hide);
+void initializeGrid(char grid[DIM][DIM]);
+void displayGrid(char grid[DIM][DIM]);
+void gridToString(char grid[DIM][DIM], char *buffer, size_t bufsize);
 
 int letterToIndex(char letter);
 
 bool isValid(int i, int j);
-bool canPlace(int size, int rot, int i, int j, char grid[DIM][DIM][3]);
-void placeShip(int size, int rot, int i, int j, char symbol, char grid[DIM][DIM][3]);
-void placement(char grid[DIM][DIM][3], int player, Ship fleet[]);
+bool canPlace(int size, int rot, int i, int j, char grid[DIM][DIM]);
+void placeShip(int size, int rot, int i, int j, char symbol, char grid[DIM][DIM]);
+void placement(char grid[DIM][DIM], int player, Ship fleet[]);
 
-bool shoot(char enemyGrid[DIM][DIM][3], char shotsGrid[DIM][DIM][3], int* shipHealth);
+bool shoot(char enemyGrid[DIM][DIM], char shotsGrid[DIM][DIM], int* shipHealth);
 
 void play(int player, const char* ip_address, bool debug);
 
