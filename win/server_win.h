@@ -15,7 +15,7 @@
 #define PORT 5000
 #define MSG_LEN 256
 
-extern int listenSocket;
+extern SOCKET listenSocket;
 int create_listening_socket(void);
 const char *recv_infos(void);
 

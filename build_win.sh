@@ -1,1 +1,0 @@
-gcc -o main.exe -lws2_32 main.c battleship.c win/server_win.c win/client_win.c
