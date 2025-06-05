@@ -1,1 +1,0 @@
-gcc -o main.exe main.c battleship.c linux/server_linux.c linux/client_linux.c win/server_win.c win/client_win.c
