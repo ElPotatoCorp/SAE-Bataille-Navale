@@ -1,14 +1,21 @@
 #ifndef BATTLESHIP_H
 #define BATTLESHIP_H
 
+#ifdef _WIN32
+  #include "win/client_win.h"
+  #include "win/server_win.h"
+#elif defined(__linux__)
+  #include "linux/client_linux.h"
+  #include "linux/server_linux.h"
+#endif
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
 #include <stdbool.h>
-#include "server.h"
-#include "client.h"
 
 #define DIM 10
 
