@@ -1,3 +1,5 @@
+#ifdef _WIN32
+
 #include "client_win.h"
 
 static void winsock_init(void) {
@@ -119,3 +121,5 @@ bool try_send_infos(const char *ip_address, const char *message, bool debug) {
     close_connection(socket, debug);
     return success;
 }
+
+#endif

@@ -4,7 +4,7 @@
 #ifdef _WIN32
   #include "win/client_win.h"
   #include "win/server_win.h"
-#elif defined(__linux__)
+#elif __linux__
   #include "linux/client_linux.h"
   #include "linux/server_linux.h"
 #endif

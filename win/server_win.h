@@ -1,3 +1,5 @@
+#ifdef _WIN32
+
 #ifndef SERVER_WIN_H
 #define SERVER_WIN_H
 
@@ -18,3 +20,5 @@ int create_listening_socket(void);
 const char *recv_infos(void);
 
 #endif // SERVER_WIN_H
+
+#endif

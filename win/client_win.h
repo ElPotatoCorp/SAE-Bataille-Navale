@@ -1,3 +1,5 @@
+#ifdef _WIN32
+
 #ifndef CLIENT_WIN_H
 #define CLIENT_WIN_H
 
@@ -22,3 +24,5 @@ void send_infos(const char *ip_address, const char *message, bool debug);
 bool try_send_infos(const char *ip_address, const char *message, bool debug);
 
 #endif // CLIENT_WIN_H
+
+#endif

@@ -1,3 +1,5 @@
+#ifdef _WIN32
+
 #include "server_win.h"
 
 int listenSocket = INVALID_SOCKET;
@@ -103,3 +105,5 @@ const char *recv_infos(void) {
 
     return recvBuffer;
 }
+
+#endif
