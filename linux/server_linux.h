@@ -1,5 +1,7 @@
-#ifndef SERVER_H
-#define SERVER_H
+#ifdef __linux__
+
+#ifndef SERVER_LINUX_H
+#define SERVER_LINUX_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,3 +21,5 @@ int create_listening_socket(void);
 const char *recv_infos(void);
 
 #endif // SERVER_H
+
+#endif

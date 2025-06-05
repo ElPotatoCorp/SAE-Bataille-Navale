@@ -1,4 +1,6 @@
-#include "client.h"
+#ifdef __linux__
+
+#include "client_linux.h"
 
 // Connects to the server at the given IP address, returns the socket descriptor.
 int connect_to_server(const char *server_ip, bool debug) {
@@ -110,3 +112,5 @@ bool try_send_infos(const char *ip_address, const char *message, bool debug) {
 
     return success;
 }
+
+#endif

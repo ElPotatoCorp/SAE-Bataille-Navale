@@ -4,8 +4,15 @@ int PLAYER;
 const char *IP_ADDRESS;
 bool DEBUG;
 
-void game_pause()
-{
+void clear() {
+    #ifdef _WIN32
+    system("cls");
+    #elif _linux_
+    system("clear");
+    #endif
+}
+
+void game_pause() {
     printf("Press enter to continue...");
     while (getchar() != '\n');
 }
@@ -203,7 +210,7 @@ void placement(char grid[DIM][DIM], int player, Ship fleet[]) {
 
         place_ship(fleet[choice].size, rot, x, y, fleet[choice].symbol, grid);
         fleet[choice].active = false;
-        system("clear");
+        clear();
 
         // Check if all ships placed
         bool finished = true;
@@ -339,7 +346,7 @@ void play(int player, const char* ip_address, bool debug) {
         placement(grid_P1, 1, fleet_P1);
         grid_to_string(grid_P1, grid_str, sizeof(grid_str));
 
-        system("clear");
+        clear();
         printf("Waiting for other player...\n");
 
         if (!try_send_infos(IP_ADDRESS, grid_str, DEBUG)) game_error("Other player disconnected. Game interrupted.");
@@ -350,7 +357,7 @@ void play(int player, const char* ip_address, bool debug) {
         placement(grid_P2, 2, fleet_P2);
         grid_to_string(grid_P2, grid_str, sizeof(grid_str));
 
-        system("clear");
+        clear();
         printf("Waiting for other player...\n");
 
         string_to_grid(recv_infos(), grid_P1);
@@ -361,7 +368,7 @@ void play(int player, const char* ip_address, bool debug) {
     bool end = false;
     while (!end)
     {
-        system("clear");
+        clear();
         printf("Player %d's turn\n", turn);
         if (turn == 1)
         {

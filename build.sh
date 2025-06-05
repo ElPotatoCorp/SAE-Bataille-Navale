@@ -1,1 +1,0 @@
-gcc -o main.exe main.c battleship.c server.c client.c

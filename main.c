@@ -3,6 +3,8 @@
 #include <string.h>
 #include "battleship.h"
 
+extern void clear();
+
 void help(char* command)
 {
     printf("Usage: %s <ip_address> <mode> --debug(optional)\n", command);
@@ -30,7 +32,7 @@ int main(int argc, char *argv[]) {
     }
 
     srand(time(NULL));
-    system("clear"); 
+    clear();
 
     (argc == 4 && strcmp(argv[3], "--debug") == 0) ? play(player, ip_address, true) : play(player, ip_address, false);
     return 0;

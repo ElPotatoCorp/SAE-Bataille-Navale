@@ -1,4 +1,6 @@
-#include "server.h"
+#ifdef __linux__
+
+#include "server_linux.h"
 
 int listenSocket = -1;
 
@@ -84,3 +86,5 @@ const char *recv_infos(void) {
 
     return recvBuffer;
 }
+
+#endif
