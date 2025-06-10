@@ -110,13 +110,32 @@ gcc -o main main.c battleship.c linux/server_linux.c linux/client_linux.c
 
 ## 🚦 Lancement du jeu
 
-1. **Lancer le serveur** (sur une machine du réseau) :
-   - Windows : exécuter `main.exe` en mode serveur
-   - Linux : exécuter `./main` en mode serveur
+Pour lancer le jeu, chaque joueur doit exécuter la commande suivante :
 
-2. **Lancer le client** (sur une machine ou la même) :
-   - Entrez l’IP du serveur lorsque demandé.
-   - Suivez les instructions à l’écran pour placer vos bateaux et jouer !
+```bash
+main.exe [ip_address_opposant] [player]
+# ou, sous Linux :
+./main [ip_address_opposant] [player]
+```
+
+- `[ip_address_opposant]` : l’adresse IP de l’autre joueur (votre adversaire) sur le réseau local.
+- `[player]` : le numéro du joueur (`1` ou `2`).  
+  → Le joueur 1 et le joueur 2 doivent choisir un numéro différent, et chacun doit renseigner l’adresse IP de l’autre.
+
+**Exemples :**
+- Sur l’ordinateur du joueur 1 (l’adresse IP du joueur 2 est `192.168.1.42`) :
+  ```bash
+  main.exe 192.168.1.42 1
+  ```
+- Sur l’ordinateur du joueur 2 (l’adresse IP du joueur 1 est `192.168.1.17`) :
+  ```bash
+  ./main 192.168.1.17 2
+  ```
+
+> ℹ️ **Remarque :**  
+> Il n’est pas nécessaire de lancer les deux jeux exactement au même moment.  
+> Chaque instance attendra patiemment la connexion de son adversaire.  
+> Une fois la connexion établie, suivez les instructions à l’écran pour placer vos bateaux et commencer la partie !
 
 ---
 
