@@ -62,11 +62,18 @@ Prérequis :
 - [MinGW-w64](https://www.mingw-w64.org/) ou autre compilateur C compatible
 - [Git](https://git-scm.com/)
 
+Compilation manuelle :
 ```bash
 git clone https://github.com/ElPotatoCorp/SAE-Bataille-Navale.git
 cd SAE-Bataille-Navale
 gcc -o main.exe main.c battleship.c win/server_win.c win/client_win.c -lws2_32
 ```
+> 💡 **Astuce :** Vous pouvez également utiliser le script `build_win.bat` fourni pour compiler automatiquement le projet sous Windows. Il suffit de lancer :
+> ```
+> build_win.bat
+> ```
+
+---
 
 ### Sous Linux
 
@@ -74,13 +81,18 @@ Prérequis :
 - `gcc` (ou équivalent)
 - `make` (optionnel)
 
+Compilation manuelle :
 ```bash
 git clone https://github.com/ElPotatoCorp/SAE-Bataille-Navale.git
 cd SAE-Bataille-Navale
 gcc -o main main.c battleship.c linux/server_linux.c linux/client_linux.c
 ```
+> 💡 **Astuce :** Vous pouvez aussi utiliser le script `build_linux.sh` pour compiler plus facilement :
+> ```bash
+> ./build_linux.sh
+> ```
 
-> **Astuce :** Un `Makefile` peut être ajouté pour faciliter la compilation multi-plateforme !
+> **Astuce avancée :** Un `Makefile` peut aussi être ajouté pour faciliter la compilation multi-plateforme !
 
 ---
 
