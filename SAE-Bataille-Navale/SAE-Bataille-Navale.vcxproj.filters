@@ -9,15 +9,15 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="Source Files\Resource Files">
+    <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="Header Files\win">
-      <UniqueIdentifier>{5dbf4fe5-7b21-4d7c-bbd3-ac42703649b2}</UniqueIdentifier>
+      <UniqueIdentifier>{5830d6f6-af19-428b-a6bb-ef1425b7a2ee}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\linux">
-      <UniqueIdentifier>{9283564d-311f-4cba-8a49-90cbab9acc65}</UniqueIdentifier>
+      <UniqueIdentifier>{d68cc733-f95c-405e-afb1-e652c685520f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -33,10 +33,10 @@
     <ClCompile Include="linux\server_linux.c">
       <Filter>Header Files\linux</Filter>
     </ClCompile>
-    <ClCompile Include="win\client_win.c">
+    <ClCompile Include="win\server_win.c">
       <Filter>Header Files\win</Filter>
     </ClCompile>
-    <ClCompile Include="win\server_win.c">
+    <ClCompile Include="win\client_win.c">
       <Filter>Header Files\win</Filter>
     </ClCompile>
   </ItemGroup>
@@ -50,10 +50,10 @@
     <ClInclude Include="linux\server_linux.h">
       <Filter>Header Files\linux</Filter>
     </ClInclude>
-    <ClInclude Include="win\client_win.h">
+    <ClInclude Include="win\server_win.h">
       <Filter>Header Files\win</Filter>
     </ClInclude>
-    <ClInclude Include="win\server_win.h">
+    <ClInclude Include="win\client_win.h">
       <Filter>Header Files\win</Filter>
     </ClInclude>
   </ItemGroup>

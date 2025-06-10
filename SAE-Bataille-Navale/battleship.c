@@ -5,11 +5,11 @@ const char *IP_ADDRESS;
 bool DEBUG;
 
 void clear() {
-#ifdef _WIN32
+    #ifdef _WIN32
     system("cls");
-#elif _linux_
+    #elif _linux_
     system("clear");
-#endif
+    #endif
 }
 
 void game_pause() {
@@ -67,8 +67,13 @@ int *get_coord(void) {
         if (!fgets(line, sizeof(line), stdin))
             continue;
 
+#ifdef _WIN32
+        if (sscanf_s(line, " %c %d", &letter, (unsigned int)sizeof(letter), &number) == 2 ||
+            sscanf_s(line, " %c%d", &letter, (unsigned int)sizeof(letter), &number) == 2) {
+#elif __linux__
         if (sscanf(line, " %c %d", &letter, &number) == 2 ||
             sscanf(line, " %c%d", &letter, &number) == 2) {
+#endif
             letter = toupper(letter);
             if (letter >= 'A' && letter <= 'J') {
                 coord[0] = letter - 'A';
@@ -97,13 +102,13 @@ int *get_coord(void) {
 char *coord_to_string(int *coord) {  
     if (coord == NULL) {  
         fprintf(stderr, "Error: NULL pointer passed to coord_to_string.\n");  
-        exit(EXIT_FAILURE);  
+        return NULL;  
     }  
 
     char *coord_str = malloc(3 * sizeof(char));  
     if (coord_str == NULL) {  
         fprintf(stderr, "Error: Memory allocation failed in coord_to_string.\n");  
-        exit(EXIT_FAILURE);  
+        return NULL;  
     }  
 
     coord_str[0] = '0' + coord[0];  
@@ -137,7 +142,7 @@ void place_ship(int size, int rot, int i, int j, char symbol, char grid[DIM][DIM
 void placement(char grid[DIM][DIM], int player, Ship fleet[]) {
     printf("Placement of Player %d's ships\n", player);
 
-    while (true) {
+    while (1) {
         display_grid(grid, false);
 
         // Print available ships
@@ -158,7 +163,11 @@ void placement(char grid[DIM][DIM], int player, Ship fleet[]) {
         if (!fgets(line, sizeof(line), stdin)) continue;
 
         // Try to parse all values at once (case-insensitive for letter)
+#ifdef _WIN32
+		if (sscanf_s(line, "%d %c %d %d", &choice, &letter, (unsigned int)sizeof(letter), &y, &rot) == 4) {
+#elif __linux__
         if (sscanf(line, "%d %c %d %d", &choice, &letter, &y, &rot) == 4) {
+#endif
             choice -= 1;
             x = toupper(letter) - 'A';
             if (y == 0) y = 9; else y -= 1;
@@ -172,7 +181,11 @@ void placement(char grid[DIM][DIM], int player, Ship fleet[]) {
             while (choice < 0 || choice >= 5 || !fleet[choice].active) {
                 printf("Ship number [1-5]: ");
                 if (!fgets(line, sizeof(line), stdin)) continue;
+#ifdef _WIN32
+				if (sscanf_s(line, "%d", &choice, (unsigned int)sizeof(choice)) == 1) {
+#elif __linux__
                 if (sscanf(line, "%d", &choice) == 1) {
+#endif
                     choice -= 1;
                 } else if (isdigit(line[0])) {
                     choice = line[0] - '1';
@@ -186,7 +199,11 @@ void placement(char grid[DIM][DIM], int player, Ship fleet[]) {
             while (x < 0 || x >= DIM) {
                 printf("Letter (A-J): ");
                 if (!fgets(line, sizeof(line), stdin)) continue;
-                if (sscanf(line, " %c", &letter) == 1 && isalpha(letter)) {
+#ifdef _WIN32
+                if (sscanf_s(line, " %c", &letter) == 1 && isalpha(letter)) {
+#elif __linux__
+				if (sscanf(line, " %c", &letter) == 1 && isalpha(letter)) {
+#endif
                     x = toupper(letter) - 'A';
                 }
                 if (x < 0 || x >= DIM) printf("Invalid letter. Try again.\n");
@@ -196,7 +213,11 @@ void placement(char grid[DIM][DIM], int player, Ship fleet[]) {
             while (y < 0 || y >= DIM) {
                 printf("Number (0-9): ");
                 if (!fgets(line, sizeof(line), stdin)) continue;
-                if (sscanf(line, "%d", &y) != 1) {
+#ifdef _WIN32
+                if (sscanf_s(line, "%d", &y) != 1) {
+#elif __linux__
+				if (sscanf(line, "%d", &y) != 1) {
+#endif
                     if (isdigit(line[0])) y = line[0] - '0';
                     else continue;
                 }
@@ -208,7 +229,11 @@ void placement(char grid[DIM][DIM], int player, Ship fleet[]) {
             while (rot < 1 || rot > 4) {
                 printf("Rotation (1=north, 2=east, 3=south, 4=west): ");
                 if (!fgets(line, sizeof(line), stdin)) continue;
+#ifdef _WIN32
+                sscanf_s(line, "%d", &rot);
+#elif __linux__
                 sscanf(line, "%d", &rot);
+#endif
                 if (rot < 1 || rot > 4) printf("Invalid rotation. Try again.\n");
             }
         }
@@ -245,8 +270,7 @@ bool shoot(char enemy_grid[DIM][DIM], char shots_grid[DIM][DIM], int* ship_healt
         shots_grid[x][y] = 'X';
         enemy_grid[x][y] = 'X';
         ship_health[symbol]--;
-        if (ship_health[symbol] == 0)
-        {
+        if (ship_health[symbol] == 0) {
             if (!mute) printf("Ship sunk!\n");
         }
         return true;
@@ -314,10 +338,10 @@ void waiting_screen(char grid[DIM][DIM], char grid_enemy[DIM][DIM], char shots_e
     if (!*end) game_pause();
 }
 
-// Not implemented yet. Copy-pasted from the original play function.
-// This one will be used to play with a bot.
+// This function isn't implemented yet, I just copy-pasted it from the original code.
+// You can implement it if you want.
 /*
-void play() {
+void play_against_bot() {
     char gridP1[DIM][DIM], gridP2[DIM][DIM];
     char shotsP1[DIM][DIM], shotsP2[DIM][DIM];
     initializeGrid(gridP1);

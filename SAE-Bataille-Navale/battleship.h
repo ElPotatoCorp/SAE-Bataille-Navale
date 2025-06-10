@@ -9,8 +9,6 @@
 #ifndef BATTLESHIP_H
 #define BATTLESHIP_H
 
-#define _CRT_SECURE_NO_WARNINGS // Disable warnings for unsafe functions like strcpy, sprintf, etc.
-
 #ifdef _WIN32
 #include "win/client_win.h"
 #include "win/server_win.h"
@@ -170,11 +168,6 @@ void action_screen(char grid[DIM][DIM], char shots[DIM][DIM], int* health, bool*
  * @param end Pointer to game end flag.
  */
 void waiting_screen(char grid[DIM][DIM], char grid_enemy[DIM][DIM], char shots[DIM][DIM], int* health, bool* end);
-
-/**
- * @brief Not implemented yet. Placeholder for future bot play functionality.
- */
-void play();
 
 /**
  * @brief Main game loop controller.

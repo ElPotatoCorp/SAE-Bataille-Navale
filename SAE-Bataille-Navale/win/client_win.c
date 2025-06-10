@@ -1,78 +1,125 @@
-/**
- * @file win/client_win.h
- * @brief Networking functions for Battleship client on Windows.
- *
- * Provides functions to connect to the server, send/receive messages, and manage connection state
- * using Winsock2. Used only on Windows platforms.
- */
-
 #ifdef _WIN32
 
-#ifndef CLIENT_WIN_H
-#define CLIENT_WIN_H
+#include "client_win.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <stdbool.h>
+static void winsock_init(void) {
+    WSADATA wsa;
+    if (WSAStartup(MAKEWORD(2,2), &wsa) != 0) {
+        fprintf(stderr, "WSAStartup failed. Error Code: %d\n", WSAGetLastError());
+        exit(EXIT_FAILURE);
+    }
+}
 
-#pragma comment(lib, "Ws2_32.lib")
+static void winsock_cleanup(void) {
+    WSACleanup();
+}
 
-#define SERVER_PORT 5000 /**< TCP port for the Battleship server. */
-#define MSG_LEN 256      /**< Maximum message length for network communication. */
+int connect_to_server(const char *server_ip, bool debug) {
+    winsock_init();
 
- /**
-  * @brief Connects to the Battleship server.
-  * @param server_ip The server's IP address.
-  * @param debug Enable debug output if true.
-  * @return Socket descriptor on success, or -1 on failure.
-  */
-int connect_to_server(const char* server_ip, bool debug);
+    SOCKET sock;
+    struct sockaddr_in server_addr;
 
-/**
- * @brief Sends a message through the given socket.
- * @param socket The socket descriptor.
- * @param message The message to send.
- * @param debug Enable debug output if true.
- */
-void send_message(int socket, const char* message, bool debug);
+    sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock == INVALID_SOCKET) {
+        fprintf(stderr, "socket() failed with error: %d\n", WSAGetLastError());
+        winsock_cleanup();
+        return -1;
+    }
+    if (debug) printf("Socket created successfully! (%llu)\n", (unsigned long long)sock);
 
-/**
- * @brief Receives a message from the server.
- * @param socket The socket descriptor.
- * @param buffer Buffer to store the received message.
- * @param bufsize Size of the buffer.
- * @param debug Enable debug output if true.
- * @return Number of bytes received, or -1 on error.
- */
-int receive_message(int socket, char* buffer, int bufsize, bool debug);
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(SERVER_PORT);
 
-/**
- * @brief Closes the connection to the server.
- * @param socket The socket descriptor.
- * @param debug Enable debug output if true.
- */
-void close_connection(int socket, bool debug);
+    if (inet_pton(AF_INET, server_ip, &server_addr.sin_addr) != 1) {
+        fprintf(stderr, "Invalid server IP address!\n");
+        closesocket(sock);
+        winsock_cleanup();
+        return -1;
+    }
 
-/**
- * @brief Sends information (e.g., player data) to a specified IP address.
- * @param ip_address The destination IP address.
- * @param message The message to send.
- * @param debug Enable debug output if true.
- */
-void send_infos(const char* ip_address, const char* message, bool debug);
+    if (connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
+        if (debug) fprintf(stderr, "connect() failed: %d\n", WSAGetLastError());
+        closesocket(sock);
+        winsock_cleanup();
+        return -1;
+    }
 
-/**
- * @brief Tries repeatedly to send information to the server, with error handling.
- * @param ip_address The server IP address.
- * @param message The message to send.
- * @param debug Enable debug output if true.
- * @return True on success, false on failure.
- */
-bool try_send_infos(const char* ip_address, const char* message, bool debug);
+    if (debug) printf("Connected to server successfully!\n");
+    return (int)sock;
+}
 
-#endif // CLIENT_WIN_H
+void send_message(int socket, const char *message, bool debug) {
+    int bytes_sent = send((SOCKET)socket, message, (int)strlen(message), 0);
+    if (bytes_sent == SOCKET_ERROR) {
+        fprintf(stderr, "send() failed: %d\n", WSAGetLastError());
+        closesocket((SOCKET)socket);
+        winsock_cleanup();
+        exit(-4);
+    } else if (bytes_sent == 0) {
+        fprintf(stderr, "Socket closed by server while sending.\n");
+        closesocket((SOCKET)socket);
+        winsock_cleanup();
+        exit(0);
+    } else {
+        if (debug) printf("Message '%s' sent successfully (%d bytes)\n", message, bytes_sent);
+    }
+}
+
+int receive_message(int socket, char *buffer, int bufsize, bool debug) {
+    int bytes_received = recv((SOCKET)socket, buffer, bufsize, 0);
+    if (bytes_received == SOCKET_ERROR) {
+        fprintf(stderr, "recv() failed: %d\n", WSAGetLastError());
+        closesocket((SOCKET)socket);
+        winsock_cleanup();
+        return -1;
+    } else if (bytes_received == 0) {
+        if (debug) fprintf(stderr, "Socket closed by server while receiving.\n");
+        closesocket((SOCKET)socket);
+        winsock_cleanup();
+        return 0;
+    } else {
+        buffer[bytes_received] = '\0';
+        if (debug) printf("Message received from server: %s (%d bytes)\n", buffer, bytes_received);
+        return 1;
+    }
+}
+
+void close_connection(int socket, bool debug) {
+    closesocket((SOCKET)socket);
+    if (debug) printf("Connection closed.\n");
+    winsock_cleanup();
+}
+
+void send_infos(const char *ip_address, const char *message, bool debug) {
+    int socket;
+    char recv_buffer[MSG_LEN];
+
+    socket = connect_to_server(ip_address, debug);
+    send_message(socket, message, debug);
+    receive_message(socket, recv_buffer, MSG_LEN - 1, debug);
+    close_connection(socket, debug);
+}
+
+bool try_send_infos(const char *ip_address, const char *message, bool debug) {
+    int socket;
+    char recv_buffer[MSG_LEN];
+
+    while (1) {
+        socket = connect_to_server(ip_address, debug);
+        if (socket >= 0) break;
+        if (debug) printf("Connection failed, retrying in 1 second...\n");
+        Sleep(1000);
+    }
+
+    bool success;
+    send_message(socket, message, debug);
+    if (receive_message(socket, recv_buffer, MSG_LEN - 1, debug) == -1) success = false;
+    else success = true;
+
+    close_connection(socket, debug);
+    return success;
+}
 
 #endif
