@@ -170,7 +170,7 @@ void action_screen(char grid[DIM][DIM], char shots[DIM][DIM], int* health, bool*
 void waiting_screen(char grid[DIM][DIM], char grid_enemy[DIM][DIM], char shots[DIM][DIM], int* health, bool* end);
 
 /**
- * @brief The main game loop.
+ * @brief Not implemented yet. Placeholder for future bot play functionality.
  */
 void play();
 
