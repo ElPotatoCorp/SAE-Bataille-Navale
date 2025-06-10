@@ -142,7 +142,7 @@ void place_ship(int size, int rot, int i, int j, char symbol, char grid[DIM][DIM
 void placement(char grid[DIM][DIM], int player, Ship fleet[]) {
     printf("Placement of Player %d's ships\n", player);
 
-    while (1) {
+    while (true) {
         display_grid(grid, false);
 
         // Print available ships
@@ -182,7 +182,7 @@ void placement(char grid[DIM][DIM], int player, Ship fleet[]) {
                 printf("Ship number [1-5]: ");
                 if (!fgets(line, sizeof(line), stdin)) continue;
 #ifdef _WIN32
-				if (sscanf_s(line, "%d", &choice, (unsigned int)sizeof(choice)) == 1) {
+				if (sscanf_s(line, "%d", &choice) == 1) {
 #elif __linux__
                 if (sscanf(line, "%d", &choice) == 1) {
 #endif
@@ -200,7 +200,7 @@ void placement(char grid[DIM][DIM], int player, Ship fleet[]) {
                 printf("Letter (A-J): ");
                 if (!fgets(line, sizeof(line), stdin)) continue;
 #ifdef _WIN32
-                if (sscanf_s(line, " %c", &letter) == 1 && isalpha(letter)) {
+                if (sscanf_s(line, " %c", &letter, (unsigned int)sizeof(letter)) == 1 && isalpha(letter)) {
 #elif __linux__
 				if (sscanf(line, " %c", &letter) == 1 && isalpha(letter)) {
 #endif
@@ -329,7 +329,7 @@ void waiting_screen(char grid[DIM][DIM], char grid_enemy[DIM][DIM], char shots_e
         display_grid(grid_enemy, true);
         printf("Player %d won!\n", PLAYER);
         *end = true;
-    } else if (strcmp(state, "INVALID") != 0){
+    } else if (strcmp(state, "INVALID") != 0) {
         shoot(grid, shots_enemy, health, state[0] - '0', state[1] - '0', !DEBUG);
         display_grid(grid, !DEBUG);
     }
@@ -337,57 +337,6 @@ void waiting_screen(char grid[DIM][DIM], char grid_enemy[DIM][DIM], char shots_e
     if (DEBUG) printf("State: %s\n", state);
     if (!*end) game_pause();
 }
-
-// This function isn't implemented yet, I just copy-pasted it from the original code.
-// You can implement it if you want.
-/*
-void play_against_bot() {
-    char gridP1[DIM][DIM], gridP2[DIM][DIM];
-    char shotsP1[DIM][DIM], shotsP2[DIM][DIM];
-    initializeGrid(gridP1);
-    initializeGrid(gridP2);
-    initializeGrid(shotsP1);
-    initializeGrid(shotsP2);
-
-    Ship fleetP1[5] = { {"Carrier",'#',5,5,true},{"Battleship",'@',4,4,true},{"Cruiser",'%',3,3,true},{"Submarine",'&',3,3,true},{"Destroyer",'$',2,2,true} };
-    Ship fleetP2[5];
-    memcpy(fleetP2, fleetP1, sizeof(fleetP1));
-
-    int healthP1[128] = { 0 }, healthP2[128] = { 0 };
-    healthP1['#'] = 5; healthP1['@'] = 4; healthP1['%'] = 3; healthP1['&'] = 3; healthP1['$'] = 2;
-    memcpy(healthP2, healthP1, sizeof(healthP1));
-
-    placement(gridP1, 1, fleetP1);
-    placement(gridP2, 2, fleetP2);
-
-    int turn = 1;
-    while (true) {
-        system("cls || clear");
-        printf("Player %d's turn\n", turn);
-        if (turn == 1) {
-            printf("Your shots grid:\n");
-            displayGrid(shotsP1);
-            shoot(gridP2, shotsP1, healthP2);
-            if (healthP2['#'] == 0 && healthP2['@'] == 0 && healthP2['%'] == 0 && healthP2['&'] == 0 && healthP2['$'] == 0) {
-                printf("Player 1 won!\n");
-                break;
-            }
-        }
-        else {
-            printf("Your shots grid:\n");
-            displayGrid(shotsP2);
-            shoot(gridP1, shotsP2, healthP1);
-            if (healthP1['#'] == 0 && healthP1['@'] == 0 && healthP1['%'] == 0 && healthP1['&'] == 0 && healthP1['$'] == 0) {
-                printf("Player 2 won!\n");
-                break;
-            }
-        }
-        turn = 3 - turn;
-        printf("Press Enter to continue...\n");
-        getchar(); getchar();
-    }
-}
-*/
 
 void play(int player, const char* ip_address, bool debug) {
     PLAYER = player;
@@ -451,26 +400,19 @@ void play(int player, const char* ip_address, bool debug) {
     }
 
     bool end = false;
-    while (!end)
-    {
+    while (!end) {
         clear();
         printf("Player %d's turn\n", turn);
-        if (turn == 1)
-        {
-            if (PLAYER == 1)
-            {
+        if (turn == 1) {
+            if (PLAYER == 1) {
                 action_screen(grid_P2, shots_P1, health_P2, &end);
-            }
-            else {
+            } else {
                 waiting_screen(grid_P2, grid_P1, shots_P1, health_P2, &end);
             }
-        }
-        else {
-            if (PLAYER == 2)
-            {
+        } else {
+            if (PLAYER == 2) {
                 action_screen(grid_P1, shots_P2, health_P1, &end);
-            }
-            else {
+            } else {
                 waiting_screen(grid_P1, grid_P2, shots_P2, health_P1, &end);
             }
         }
