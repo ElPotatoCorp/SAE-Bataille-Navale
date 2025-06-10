@@ -110,9 +110,3 @@ gcc -o main main.c battleship.c linux/server_linux.c linux/client_linux.c
 
 Projet sous licence MIT.  
 Voir [LICENSE](LICENSE) pour les détails.
-
----
-
-<p align="center">
-  <img src="https://upload.wikimedia.org/wikipedia/commons/3/32/Battleship_game_board.svg" alt="Battleship" width="300"/>
-</p>
