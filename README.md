@@ -68,6 +68,18 @@ git clone https://github.com/ElPotatoCorp/SAE-Bataille-Navale.git
 cd SAE-Bataille-Navale
 gcc -o main.exe main.c battleship.c win/server_win.c win/client_win.c -lws2_32
 ```
+> ⚠️ **Attention :**  
+> Si vous voyez une erreur similaire à :
+> ```
+> win/client_win.c: In function 'connect_to_server':
+> win/client_win.c:35:9: warning: implicit declaration of function 'inet_pton' [-Wimplicit-function-declaration]
+>      if (inet_pton(AF_INET, server_ip, &server_addr.sin_addr) != 1) {
+>          ^~~~~~~~~
+> C:\Users\XXX\AppData\Local\Temp\ccMLGspN.o:client_win.c:(.text+0x13c): undefined reference to `inet_pton'
+> ```
+> cela signifie que votre version de MinGW ne fournit pas la fonction `inet_pton`.  
+> Pour corriger ce problème, il est recommandé de télécharger une version plus récente du compilateur via [MSYS2](https://www.msys2.org/), qui propose des versions de MinGW-w64 à jour et compatibles.
+
 > 💡 **Astuce :** Vous pouvez également utiliser le script `build_win.bat` fourni pour compiler automatiquement le projet sous Windows. Il suffit de lancer :
 > ```
 > build_win.bat
