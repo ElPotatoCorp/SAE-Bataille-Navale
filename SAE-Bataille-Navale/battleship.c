@@ -5,11 +5,11 @@ const char *IP_ADDRESS;
 bool DEBUG;
 
 void clear() {
-    #ifdef _WIN32
+#ifdef _WIN32
     system("cls");
-    #elif _linux_
+#elif _linux_
     system("clear");
-    #endif
+#endif
 }
 
 void game_pause() {
@@ -94,13 +94,23 @@ int *get_coord(void) {
     return coord;
 }
 
-char *coord_to_string(int *coord) {
-    char *coord_str = malloc(3 * sizeof(char));
-    coord_str[0] = '0' + coord[0];
-    coord_str[1] = '0' + coord[1];
-    coord_str[2] = '\0';
+char *coord_to_string(int *coord) {  
+    if (coord == NULL) {  
+        fprintf(stderr, "Error: NULL pointer passed to coord_to_string.\n");  
+        exit(EXIT_FAILURE);  
+    }  
 
-    return coord_str;   
+    char *coord_str = malloc(3 * sizeof(char));  
+    if (coord_str == NULL) {  
+        fprintf(stderr, "Error: Memory allocation failed in coord_to_string.\n");  
+        exit(EXIT_FAILURE);  
+    }  
+
+    coord_str[0] = '0' + coord[0];  
+    coord_str[1] = '0' + coord[1];  
+    coord_str[2] = '\0';  
+
+    return coord_str;  
 }
 
 bool is_valid(int i, int j) {
@@ -127,7 +137,7 @@ void place_ship(int size, int rot, int i, int j, char symbol, char grid[DIM][DIM
 void placement(char grid[DIM][DIM], int player, Ship fleet[]) {
     printf("Placement of Player %d's ships\n", player);
 
-    while (1) {
+    while (true) {
         display_grid(grid, false);
 
         // Print available ships
@@ -306,6 +316,7 @@ void waiting_screen(char grid[DIM][DIM], char grid_enemy[DIM][DIM], char shots_e
 
 // Not implemented yet. Copy-pasted from the original play function.
 // This one will be used to play with a bot.
+/*
 void play() {
     char gridP1[DIM][DIM], gridP2[DIM][DIM];
     char shotsP1[DIM][DIM], shotsP2[DIM][DIM];
@@ -352,6 +363,7 @@ void play() {
         getchar(); getchar();
     }
 }
+*/
 
 void play(int player, const char* ip_address, bool debug) {
     PLAYER = player;

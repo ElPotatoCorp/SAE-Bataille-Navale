@@ -9,6 +9,8 @@
 #ifndef BATTLESHIP_H
 #define BATTLESHIP_H
 
+#define _CRT_SECURE_NO_WARNINGS // Disable warnings for unsafe functions like strcpy, sprintf, etc.
+
 #ifdef _WIN32
 #include "win/client_win.h"
 #include "win/server_win.h"
