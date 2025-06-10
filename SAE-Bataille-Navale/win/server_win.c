@@ -1,109 +1,42 @@
+/**
+ * @file win/server_win.h
+ * @brief Networking functions for Battleship server on Windows.
+ *
+ * Provides setup, listening, and data reception for the Battleship server using Winsock2.
+ * Used only on Windows platforms.
+ */
+
 #ifdef _WIN32
 
-#include "server_win.h"
+#ifndef SERVER_WIN_H
+#define SERVER_WIN_H
 
-SOCKET listenSocket = INVALID_SOCKET;
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <stdbool.h>
 
-static void winsock_init(void) {
-    WSADATA wsa;
-    if (WSAStartup(MAKEWORD(2,2), &wsa) != 0) {
-        fprintf(stderr, "WSAStartup failed. Error Code: %d\n", WSAGetLastError());
-        exit(EXIT_FAILURE);
-    }
-}
+#pragma comment(lib, "Ws2_32.lib")
 
-static void winsock_cleanup(void) {
-    WSACleanup();
-}
+#define PORT 5000      /**< TCP port for the Battleship server. */
+#define MSG_LEN 256    /**< Maximum message length for network communication. */
 
-int create_listening_socket(void) {
-    winsock_init();
-    SOCKET sock;
-    struct sockaddr_in localAddress;
+extern SOCKET listenSocket; /**< Listening socket for incoming client connections. */
 
-    sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock == INVALID_SOCKET) {
-        fprintf(stderr, "socket() failed: %d\n", WSAGetLastError());
-        winsock_cleanup();
-        exit(-1);
-    }
+/**
+ * @brief Creates and configures the listening socket for the server.
+ * @return The socket descriptor on success, or -1 on failure.
+ */
+int create_listening_socket(void);
 
-    int optval = 1;
-    if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&optval, sizeof(optval)) == SOCKET_ERROR) {
-        fprintf(stderr, "setsockopt() failed: %d\n", WSAGetLastError());
-        closesocket(sock);
-        winsock_cleanup();
-        exit(-1);
-    }
+/**
+ * @brief Receives information from a connected client.
+ * @return Pointer to a static buffer containing the received message.
+ */
+const char* recv_infos(void);
 
-    memset(&localAddress, 0, sizeof(localAddress));
-    localAddress.sin_family = AF_INET;
-    localAddress.sin_addr.s_addr = htonl(INADDR_ANY);
-    localAddress.sin_port = htons(PORT);
-
-    if (bind(sock, (struct sockaddr *)&localAddress, sizeof(localAddress)) == SOCKET_ERROR) {
-        fprintf(stderr, "bind() failed: %d\n", WSAGetLastError());
-        closesocket(sock);
-        winsock_cleanup();
-        exit(-2);
-    }
-
-    if (listen(sock, 5) == SOCKET_ERROR) {
-        fprintf(stderr, "listen() failed: %d\n", WSAGetLastError());
-        closesocket(sock);
-        winsock_cleanup();
-        exit(-3);
-    }
-
-    return (int)sock;
-}
-
-const char *recv_infos(void) {
-    struct sockaddr_in remoteAddress;
-    SOCKET clientSocket;
-    char *recvBuffer = (char*)malloc(MSG_LEN * sizeof(char));
-    int addressLength = sizeof(remoteAddress);
-    if (!recvBuffer) {
-        fprintf(stderr, "malloc() failed\n");
-        return NULL;
-    }
-
-    listenSocket = (SOCKET)create_listening_socket();
-
-    clientSocket = accept(listenSocket, (struct sockaddr *)&remoteAddress, &addressLength);
-    if (clientSocket == INVALID_SOCKET) {
-        fprintf(stderr, "accept() failed: %d\n", WSAGetLastError());
-        closesocket(listenSocket);
-        free(recvBuffer);
-        winsock_cleanup();
-        return NULL;
-    }
-
-    memset(recvBuffer, 0, MSG_LEN * sizeof(char));
-
-    int bytesRead = recv(clientSocket, recvBuffer, MSG_LEN - 1, 0);
-    if (bytesRead > 0) {
-        recvBuffer[bytesRead] = '\0';
-        const char *feedback = "OK";
-        if (send(clientSocket, feedback, (int)strlen(feedback), 0) == SOCKET_ERROR) {
-            fprintf(stderr, "send(feedback) failed: %d\n", WSAGetLastError());
-        }
-    } else if (bytesRead == 0) {
-        printf("The socket has been closed by the client!\n");
-        free(recvBuffer);
-        recvBuffer = NULL;
-    } else {
-        fprintf(stderr, "recv() failed: %d\n", WSAGetLastError());
-        free(recvBuffer);
-        recvBuffer = NULL;
-    }
-
-    closesocket(clientSocket);
-    closesocket(listenSocket);
-    listenSocket = INVALID_SOCKET;
-    winsock_cleanup();
-
-    return recvBuffer;
-}
+#endif // SERVER_WIN_H
 
 #endif

@@ -304,6 +304,55 @@ void waiting_screen(char grid[DIM][DIM], char grid_enemy[DIM][DIM], char shots_e
     if (!*end) game_pause();
 }
 
+// Not implemented yet. Copy-pasted from the original play function.
+// This one will be used to play with a bot.
+void play() {
+    char gridP1[DIM][DIM], gridP2[DIM][DIM];
+    char shotsP1[DIM][DIM], shotsP2[DIM][DIM];
+    initializeGrid(gridP1);
+    initializeGrid(gridP2);
+    initializeGrid(shotsP1);
+    initializeGrid(shotsP2);
+
+    Ship fleetP1[5] = { {"Carrier",'#',5,5,true},{"Battleship",'@',4,4,true},{"Cruiser",'%',3,3,true},{"Submarine",'&',3,3,true},{"Destroyer",'$',2,2,true} };
+    Ship fleetP2[5];
+    memcpy(fleetP2, fleetP1, sizeof(fleetP1));
+
+    int healthP1[128] = { 0 }, healthP2[128] = { 0 };
+    healthP1['#'] = 5; healthP1['@'] = 4; healthP1['%'] = 3; healthP1['&'] = 3; healthP1['$'] = 2;
+    memcpy(healthP2, healthP1, sizeof(healthP1));
+
+    placement(gridP1, 1, fleetP1);
+    placement(gridP2, 2, fleetP2);
+
+    int turn = 1;
+    while (true) {
+        system("cls || clear");
+        printf("Player %d's turn\n", turn);
+        if (turn == 1) {
+            printf("Your shots grid:\n");
+            displayGrid(shotsP1);
+            shoot(gridP2, shotsP1, healthP2);
+            if (healthP2['#'] == 0 && healthP2['@'] == 0 && healthP2['%'] == 0 && healthP2['&'] == 0 && healthP2['$'] == 0) {
+                printf("Player 1 won!\n");
+                break;
+            }
+        }
+        else {
+            printf("Your shots grid:\n");
+            displayGrid(shotsP2);
+            shoot(gridP1, shotsP2, healthP1);
+            if (healthP1['#'] == 0 && healthP1['@'] == 0 && healthP1['%'] == 0 && healthP1['&'] == 0 && healthP1['$'] == 0) {
+                printf("Player 2 won!\n");
+                break;
+            }
+        }
+        turn = 3 - turn;
+        printf("Press Enter to continue...\n");
+        getchar(); getchar();
+    }
+}
+
 void play(int player, const char* ip_address, bool debug) {
     PLAYER = player;
     IP_ADDRESS = ip_address;

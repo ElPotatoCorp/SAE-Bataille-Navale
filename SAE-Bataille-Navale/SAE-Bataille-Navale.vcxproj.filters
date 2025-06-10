@@ -9,9 +9,15 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="Resource Files">
+    <Filter Include="Source Files\Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\win">
+      <UniqueIdentifier>{5dbf4fe5-7b21-4d7c-bbd3-ac42703649b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\linux">
+      <UniqueIdentifier>{9283564d-311f-4cba-8a49-90cbab9acc65}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -21,10 +27,34 @@
     <ClCompile Include="battleship.c">
       <Filter>Header Files</Filter>
     </ClCompile>
+    <ClCompile Include="linux\client_linux.c">
+      <Filter>Header Files\linux</Filter>
+    </ClCompile>
+    <ClCompile Include="linux\server_linux.c">
+      <Filter>Header Files\linux</Filter>
+    </ClCompile>
+    <ClCompile Include="win\client_win.c">
+      <Filter>Header Files\win</Filter>
+    </ClCompile>
+    <ClCompile Include="win\server_win.c">
+      <Filter>Header Files\win</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="battleship.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="linux\client_linux.h">
+      <Filter>Header Files\linux</Filter>
+    </ClInclude>
+    <ClInclude Include="linux\server_linux.h">
+      <Filter>Header Files\linux</Filter>
+    </ClInclude>
+    <ClInclude Include="win\client_win.h">
+      <Filter>Header Files\win</Filter>
+    </ClInclude>
+    <ClInclude Include="win\server_win.h">
+      <Filter>Header Files\win</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
