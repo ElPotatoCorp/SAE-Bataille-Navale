@@ -1,5 +1,6 @@
 #include "battleship.h"
 
+SOCKET SOCKET_FD;
 int PLAYER;
 const char *IP_ADDRESS;
 bool DEBUG;
@@ -25,9 +26,7 @@ void initialize_grid(char grid[DIM][DIM]) {
     }
 }
 
-void display_grid(char grid[DIM][DIM], bool refresh) {
-    if (refresh)
-        printf("\033[%dA", DIM + 1); // Move up (number of lines grid uses)
+void display_grid(char grid[DIM][DIM]) {
     printf("  1 2 3 4 5 6 7 8 9 0");
     for (int i = 0; i < DIM; i++) {
         printf("\n%c ", 'A' + i);
@@ -54,7 +53,6 @@ void string_to_grid(const char *buffer, char grid[DIM][DIM]) {
         }
     }
 }
-
 
 int *get_coord(void) {
     int *coord = malloc(2 * sizeof(int));
@@ -143,7 +141,7 @@ void placement(char grid[DIM][DIM], int player, Ship fleet[]) {
     printf("Placement of Player %d's ships\n", player);
 
     while (true) {
-        display_grid(grid, false);
+        display_grid(grid);
 
         // Print available ships
         printf("Choose a ship (1-5):\n");
@@ -283,22 +281,46 @@ bool shoot(char enemy_grid[DIM][DIM], char shots_grid[DIM][DIM], int* ship_healt
     }
 }
 
-void game_error(const char *message)
+void server_communication_handler(int socket, char* buffer, int bufsize, const char *message)
 {
-    printf("%s\n", message);
-    exit(0);
+    int code = receive_message(SOCKET_FD, buffer, MSG_LEN - 1, DEBUG);
+    if (code == 404) {
+        fprintf(stdout, "Warning: %s\n", "The other player has left or the connexion has been closed.");
+		close_connection(socket, DEBUG);
+		exit(EXIT_SUCCESS);
+    }
+	if (code <= 0) {
+        fprintf(stderr, "Error: %s\n", message);
+        close_connection(socket, DEBUG);
+        exit(EXIT_FAILURE);
+	}
+}
+
+void placement_screen(char grid[DIM][DIM], Ship fleet[5], char enemy_grid[DIM][DIM]) {
+    char grid_str[DIM * DIM + 1];
+    placement(grid, PLAYER, fleet);
+    grid_to_string(grid, grid_str, sizeof(grid_str));
+
+    clear();
+    printf("Waiting for other player...\n");
+    fflush(stdout);
+
+    send_message(SOCKET_FD, grid_str, DEBUG);
+    game_error(SOCKET_FD, &grid_str, DIM * DIM + 1, "Error receiving grid.");
+    string_to_grid(grid_str, enemy_grid);
+    if (DEBUG) game_pause();
 }
 
 void action_screen(char grid[DIM][DIM], char shots[DIM][DIM], int *health, bool *end) {
     printf("Your shots grid:\n");
-    display_grid(shots, false);
+    display_grid(shots);
 
     int *coord = get_coord();
     if (!is_valid(coord[0], coord[1])) {
         printf("Invalid coordinates.\n");
         game_pause();
 
-        if (!try_send_infos(IP_ADDRESS, "INVALID", DEBUG)) game_error("Other player disconnected. Game interrupted.");
+        send_message(SOCKET_FD, "INVALID", DEBUG);
 
         free(coord);
         return;
@@ -310,10 +332,10 @@ void action_screen(char grid[DIM][DIM], char shots[DIM][DIM], int *health, bool 
     if (health['#'] == 0 && health['@'] == 0 && health['%'] == 0 && health['&'] == 0 && health['$'] == 0) {
         printf("Player %d won!\n", PLAYER);
         *end = true;
-        if (!try_send_infos(IP_ADDRESS, "END", DEBUG)) game_error("Other player disconnected. Game interrupted.");
+        send_message(SOCKET_FD, "END", DEBUG);
     } else {
         game_pause();
-        if (!try_send_infos(IP_ADDRESS, coord_to_string(coord), DEBUG)) game_error("Other player disconnected. Game interrupted.");
+        send_message(SOCKET_FD, coord_to_string(coord), DEBUG);
     }
 
     free(coord);
@@ -321,25 +343,37 @@ void action_screen(char grid[DIM][DIM], char shots[DIM][DIM], int *health, bool 
 
 void waiting_screen(char grid[DIM][DIM], char grid_enemy[DIM][DIM], char shots_enemy[DIM][DIM], int *health, bool *end) {
     printf("Your fleet grid:\n");
-    display_grid(grid, false);
+    display_grid(grid);
 
-    const char *state = recv_infos();
+    char state[MSG_LEN];
+	game_error(SOCKET_FD, &state, MSG_LEN - 1,"Error receiving state.");
 
     if (strcmp(state, "END") == 0) {
-        display_grid(grid_enemy, true);
+        clear();
+		printf("Enemy fleet grid:\n");
+        display_grid(grid_enemy);
         printf("Player %d won!\n", PLAYER);
         *end = true;
     } else if (strcmp(state, "INVALID") != 0) {
         shoot(grid, shots_enemy, health, state[0] - '0', state[1] - '0', !DEBUG);
-        display_grid(grid, !DEBUG);
+        clear();
+        printf("Your fleet grid:\n");
+        display_grid(grid);
     }
 
     if (DEBUG) printf("State: %s\n", state);
     if (!*end) game_pause();
 }
 
-void play(int player, const char* ip_address, bool debug) {
-    PLAYER = player;
+void play(const char* ip_address, bool debug) {
+    SOCKET_FD = connect_to_server(ip_address, debug);
+    int turn;
+	if (SOCKET_FD >= 0) {
+		char recv_buffer[MSG_LEN];
+		game_error(SOCKET_FD, &recv_buffer, 3, "Error connecting to server.");
+        PLAYER = recv_buffer[0] - '0';
+        turn = recv_buffer[1] - '0';
+	}
     IP_ADDRESS = ip_address;
     DEBUG = debug;
 
@@ -359,44 +393,11 @@ void play(int player, const char* ip_address, bool debug) {
     health_P1['#'] = 5; health_P1['@'] = 4; health_P1['%'] = 3; health_P1['&'] = 3; health_P1['$'] = 2;
     memcpy(health_P2, health_P1, sizeof(health_P1));
 
-    int turn;
     if (PLAYER == 1) {
-        turn = rand() % 2 + 1;
-
-        char turn_str = turn + '0';
-
-        printf("Waiting for other player to connect...\n");
-        if (!try_send_infos(IP_ADDRESS, &turn_str, DEBUG)) game_error("Other player disconnected. Game interrupted.");
-        printf("Turn: %d\n", turn);
+        placement_screen(grid_P1, fleet_P1, grid_P2);
     }
     else {
-        printf("Waiting for other player to connect...\n");
-        turn = atoi(recv_infos());
-        printf("Turn: %d\n", turn);
-    }
-
-    char grid_str[DIM * DIM + 1];
-    if (PLAYER == 1) {
-        placement(grid_P1, 1, fleet_P1);
-        grid_to_string(grid_P1, grid_str, sizeof(grid_str));
-
-        clear();
-        printf("Waiting for other player...\n");
-
-        if (!try_send_infos(IP_ADDRESS, grid_str, DEBUG)) game_error("Other player disconnected. Game interrupted.");
-        string_to_grid(recv_infos(), grid_P2);
-        if (DEBUG) game_pause();
-    }
-    else {
-        placement(grid_P2, 2, fleet_P2);
-        grid_to_string(grid_P2, grid_str, sizeof(grid_str));
-
-        clear();
-        printf("Waiting for other player...\n");
-
-        string_to_grid(recv_infos(), grid_P1);
-        if (!try_send_infos(IP_ADDRESS, grid_str, DEBUG)) game_error("Other player disconnected. Game interrupted.");
-        if (DEBUG) game_pause();
+        placement_screen(grid_P2, fleet_P2, grid_P1);
     }
 
     bool end = false;
@@ -418,4 +419,6 @@ void play(int player, const char* ip_address, bool debug) {
         }
         turn = (turn == 1) ? 2 : 1;
     }
+
+    close_connection(SOCKET_FD, DEBUG);
 }

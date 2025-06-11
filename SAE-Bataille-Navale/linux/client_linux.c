@@ -2,115 +2,80 @@
 
 #include "client_linux.h"
 
-// Connects to the server at the given IP address, returns the socket descriptor.
-int connect_to_server(const char *server_ip, bool debug) {
+int connect_to_server(const char* server_ip, bool debug) {
     int sock;
     struct sockaddr_in server_addr;
-    socklen_t addr_len = sizeof(server_addr);
 
-    sock = socket(PF_INET, SOCK_STREAM, 0);
+    sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0) {
-        perror("socket");
+        perror("socket() failed");
         return -1;
     }
     if (debug) printf("Socket created successfully! (%d)\n", sock);
 
-    memset(&server_addr, 0x00, addr_len);
-    server_addr.sin_family = PF_INET;
-    server_addr.sin_port = htons(SERVER_PORT);
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(PORT);
 
-    if (inet_aton(server_ip, &server_addr.sin_addr) == 0) {
+    if (inet_pton(AF_INET, server_ip, &server_addr.sin_addr) <= 0) {
         fprintf(stderr, "Invalid server IP address!\n");
         close(sock);
         return -1;
     }
 
-    // Try to connect to the server
-    if (connect(sock, (struct sockaddr *)&server_addr, addr_len) == -1) {
-        if (debug) perror("connect");
+    if (connect(sock, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
+        if (debug) perror("connect() failed");
         close(sock);
-        return -1; // <--- Don't exit, just return -1
+        return -1;
     }
+
     if (debug) printf("Connected to server successfully!\n");
     return sock;
 }
 
-
-// Sends a message to the server.
-void send_message(int socket, const char *message, bool debug) {
-    int bytes_sent = write(socket, message, strlen(message));
-    switch (bytes_sent) {
-        case -1:
-            perror("write");
-            close(socket);
-            exit(-4);
-        case 0:
-            fprintf(stderr, "Socket closed by server while sending.\n");
-            close(socket);
-            exit(0);
-        default:
-            if (debug) printf("Message '%s' sent successfully (%d bytes)\n", message, bytes_sent);
+void send_message(int socket, const char* message, bool debug) {
+    int bytes_sent = send(socket, message, strlen(message), 0);
+    if (bytes_sent < 0) {
+        perror("send() failed");
+        close(socket);
+        exit(-4);
+    }
+    else if (bytes_sent == 0) {
+        fprintf(stderr, "Socket closed by server while sending.\n");
+        close(socket);
+        exit(0);
+    }
+    else {
+        if (debug) printf("Message '%s' sent successfully (%d bytes)\n", message, bytes_sent);
     }
 }
 
-// Receives a message from the server.
-int receive_message(int socket, char *buffer, int bufsize, bool debug) {
-    int bytes_received = read(socket, buffer, bufsize);
+int receive_message(int socket, char* buffer, int bufsize, bool debug) {
+    int bytes_received = recv(socket, buffer, bufsize - 1, 0);
     switch (bytes_received) {
-        case -1:
-            perror("read");
-            close(socket);
-            return -1; // Server error
-        case 0:
-            if (debug) fprintf(stderr, "Socket closed by server while receiving.\n");
-            close(socket);
-            return 0; // Connection closed/denied
-        default:
+    case -1:
+        if (debug) perror("recv() failed");
+        return -1;
+    case 0:
+        if (debug) fprintf(stderr, "Socket closed by server while receiving.\n");
+        return 0;
+    default:
+        if (bytes_received > 0) {
             buffer[bytes_received] = '\0';
             if (debug) printf("Message received from server: %s (%d bytes)\n", buffer, bytes_received);
-            return 1; // Success
+            if (strcmp(buffer, "404") == 0) return 404;
+            return bytes_received;
+        }
+        else {
+            if (debug) fprintf(stderr, "Unknown recv() result: %d\n", bytes_received);
+            return -1;
+        }
     }
 }
 
-// Closes the socket connection.
 void close_connection(int socket, bool debug) {
     close(socket);
     if (debug) printf("Connection closed.\n");
 }
 
-void send_infos(const char *ip_address, const char *message, bool debug) {
-    int socket;
-    char recv_buffer[MSG_LEN];
-
-    socket = connect_to_server(ip_address, debug);
-
-    send_message(socket, message, debug);
-    receive_message(socket, recv_buffer, MSG_LEN - 1, debug);
-
-    close_connection(socket, debug);
-}
-
-bool try_send_infos(const char *ip_address, const char *message, bool debug) {
-    int socket;
-    char recv_buffer[MSG_LEN];
-
-    while (1) {
-        socket = connect_to_server(ip_address, debug);
-        if (socket >= 0) {
-            break;
-        }
-        if (debug) printf("Connection failed, retrying in 1 second...\n");
-        sleep(1);
-    }
-
-    bool success;
-    send_message(socket, message, debug);
-    if (receive_message(socket, recv_buffer, MSG_LEN - 1, debug) == -1) success = false;
-    else success = true;
-
-    close_connection(socket, debug);
-
-    return success;
-}
-
-#endif
+#endif // __linux__

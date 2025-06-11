@@ -85,14 +85,14 @@ void string_to_grid(const char* buffer, char grid[DIM][DIM]);
  * @brief Prompts for and returns a pointer to a coordinate (i, j).
  * @return Pointer to a 2-element int array [i, j].
  */
-int* get_coord(void);
+int *get_coord(void);
 
 /**
  * @brief Converts a coordinate to a string (e.g., "A5").
  * @param coord Pointer to a 2-element int array [i, j].
  * @return String representation of the coordinate.
  */
-char* coord_to_string(int* coord);
+char *coord_to_string(int* coord);
 
 /**
  * @brief Checks if a coordinate is valid on the grid.
@@ -146,9 +146,20 @@ bool shoot(char enemyGrid[DIM][DIM], char shotsGrid[DIM][DIM], int* shipHealth, 
 
 /**
  * @brief Prints a game error message and handles error state.
+ * @param socket The socket descriptor.
+ * @param buffer Buffer to store the received message.
+ * @param bufsize Size of the buffer.
  * @param message The error message.
  */
-void game_error(const char* message);
+void server_communication_handler(int socket, char* buffer, int bufsize, const char* message);
+
+/**
+ * @brief Displays the player's placement screen.
+ * @param grid The player's grid.
+ * @param fleet Array of ships.
+ * @param enemy_grid The opponent's grid.
+ */
+void placement_screen(char grid[DIM][DIM], Ship fleet[5], char enemy_grid[DIM][DIM]);
 
 /**
  * @brief Displays the player's action screen and processes input.
@@ -167,7 +178,7 @@ void action_screen(char grid[DIM][DIM], char shots[DIM][DIM], int* health, bool*
  * @param health Ship health array.
  * @param end Pointer to game end flag.
  */
-void waiting_screen(char grid[DIM][DIM], char grid_enemy[DIM][DIM], char shots[DIM][DIM], int* health, bool* end);
+void waiting_screen(char grid[DIM][DIM], char grid_enemy[DIM][DIM], char shots[DIM][DIM], int *health, bool *end);
 
 /**
  * @brief Main game loop controller.
@@ -175,6 +186,6 @@ void waiting_screen(char grid[DIM][DIM], char grid_enemy[DIM][DIM], char shots[D
  * @param ip_address IP address of the server (for network play).
  * @param debug Enable debug output if true.
  */
-void play(int player, const char* ip_address, bool debug);
+void play(const char *ip_address, bool debug);
 
 #endif // BATTLESHIP_H

@@ -21,8 +21,13 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-#define SERVER_PORT IPPORT_USERRESERVED /**< Default TCP port for Battleship server. */
-#define MSG_LEN 256                    /**< Maximum message length for network communication. */
+#ifndef PORT
+#define PORT IPPORT_USERRESERVED	/**< TCP port for the Battleship server. */
+#endif
+
+#ifndef MSG_LEN
+#define MSG_LEN 256					/**< Maximum message length for network communication. */
+#endif
 
  /**
   * @brief Connects to the Battleship server.
@@ -56,23 +61,6 @@ int receive_message(int socket, char* buffer, int bufsize, bool debug);
  * @param debug Enable debug output if true.
  */
 void close_connection(int socket, bool debug);
-
-/**
- * @brief Sends information (e.g., player data) to a specified IP address.
- * @param ip_address The destination IP address.
- * @param message The message to send.
- * @param debug Enable debug output if true.
- */
-void send_infos(const char* ip_address, const char* message, bool debug);
-
-/**
- * @brief Tries repeatedly to send information to the server, with error handling.
- * @param ip_address The server IP address.
- * @param message The message to send.
- * @param debug Enable debug output if true.
- * @return True on success, false on failure.
- */
-bool try_send_infos(const char* ip_address, const char* message, bool debug);
 
 #endif // CLIENT_H
 

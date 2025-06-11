@@ -21,40 +21,40 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="battleship.c">
-      <Filter>Header Files</Filter>
-    </ClCompile>
     <ClCompile Include="linux\client_linux.c">
       <Filter>Header Files\linux</Filter>
-    </ClCompile>
-    <ClCompile Include="linux\server_linux.c">
-      <Filter>Header Files\linux</Filter>
-    </ClCompile>
-    <ClCompile Include="win\server_win.c">
-      <Filter>Header Files\win</Filter>
     </ClCompile>
     <ClCompile Include="win\client_win.c">
       <Filter>Header Files\win</Filter>
     </ClCompile>
+    <ClCompile Include="main.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="win\server_win.c">
+      <Filter>Header Files\win</Filter>
+    </ClCompile>
+    <ClCompile Include="battleship.c">
+      <Filter>Header Files</Filter>
+    </ClCompile>
+    <ClCompile Include="linux\server_linux.c">
+      <Filter>Header Files\linux</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="battleship.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="linux\client_linux.h">
       <Filter>Header Files\linux</Filter>
     </ClInclude>
-    <ClInclude Include="linux\server_linux.h">
-      <Filter>Header Files\linux</Filter>
+    <ClInclude Include="win\client_win.h">
+      <Filter>Header Files\win</Filter>
+    </ClInclude>
+    <ClInclude Include="battleship.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="win\server_win.h">
       <Filter>Header Files\win</Filter>
     </ClInclude>
-    <ClInclude Include="win\client_win.h">
-      <Filter>Header Files\win</Filter>
+    <ClInclude Include="linux\server_linux.h">
+      <Filter>Header Files\linux</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

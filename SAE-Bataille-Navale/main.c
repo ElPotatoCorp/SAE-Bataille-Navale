@@ -2,16 +2,28 @@
 #include <stdlib.h>  
 #include <string.h>  
 #include <time.h>  
+#include <signal.h>
 #include "battleship.h"  
 
 extern void clear();  
 
-void help(char* command)  
-{  
-    printf("Usage: %s <ip_address> <mode> --debug(optional)\n", command);  
-    printf("  <ip_address>: IP address of the other player\n");  
-    printf("  <mode>: 1 = first player, 2 = second player\n");  
-}  
+static void help(char* command) {
+    printf(
+        "Usage:\n"
+        "  %s [--server | -s] [--debug]\n"
+        "  %s [--player | -p] <ip_address> [--debug]\n"
+        "\nOptions:\n"
+        "  --server, -s            Start in server mode (relay mode for two players)\n"
+        "  --player, -p <ip>       Start in player mode and connect to server at <ip>\n"
+        "  --debug                 Enable debug output\n"
+        "  --help, -h              Display this help message\n"
+        "\nExamples:\n"
+        "  %s --server --debug\n"
+        "  %s -p 192.168.1.42\n"
+        "\n",
+        command, command, command, command
+    );
+}
 
 int main(int argc, char *argv[]) {  
     if (argc == 1 || (argc == 2 && strcmp(argv[1], "-h") == 0)) {  
@@ -19,22 +31,39 @@ int main(int argc, char *argv[]) {
         return 0;  
     }  
 
-    if (argc < 3 && argc > 4) {  
+    if (argc < 2 && argc > 4) {  
         help(argv[0]);  
         return 1;  
     }  
 
-    const char *ip_address = argv[1];  
-    int player = atoi(argv[2]);  
+    bool debug = (strcmp(argv[argc - 1], "--debug") == 0);
 
-    if (player != 1 && player != 2) {  
-        printf("Invalid mode. Use 1 for first player, 2 for second player.\n");  
-        return 1;  
-    }  
+    signal(SIGINT, on_sigint);
 
-    srand((unsigned int)time(NULL)); // Explicit cast to unsigned int to resolve warning  
-    clear();  
+    if (strcmp(argv[1], "--server") == 0 || strcmp(argv[1], "-s") == 0) {
+        srand((unsigned int)time(NULL)); // Explicit cast to unsigned int to resolve warning  
+        char data[3];
+		snprintf(data, sizeof(data), "%d%d", 1, rand() % 2 + 1);
 
-    (argc == 4 && strcmp(argv[3], "--debug") == 0) ? play(player, ip_address, true) : play(player, ip_address, false);  
-    return 0;  
+        initialize_winsock();
+        SOCKET server_fd = create_listening_socket();
+        SOCKET player1_fd = accept_client(server_fd, "Player 1", debug);
+        SOCKET player2_fd = accept_client(server_fd, "Player 2", debug);
+
+		send_message(player1_fd, data, debug);
+        data[0] = 2 + '0';
+        send_message(player2_fd, data, debug);
+        relay_loop(player1_fd, player2_fd);
+
+        cleanup(player1_fd, player2_fd, server_fd);
+    }
+    else if (strcmp(argv[1], "--player") == 0 || strcmp(argv[1], "-p") == 0) {
+        char *ip_address = argv[2];
+
+        clear();
+
+        play(ip_address, debug);
+    }
+
+    return 0;
 }
