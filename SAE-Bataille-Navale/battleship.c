@@ -4,6 +4,7 @@ SOCKET SOCKET_FD;
 int PLAYER;
 const char *IP_ADDRESS;
 bool DEBUG;
+int LAST_X = -1, LAST_Y = -1;
 
 void clear() {
     #ifdef _WIN32
@@ -31,7 +32,26 @@ void display_grid(char grid[DIM][DIM]) {
     for (int i = 0; i < DIM; i++) {
         printf("\n%c ", 'A' + i);
         for (int j = 0; j < DIM; j++) {
-            printf("%c ", grid[i][j]);
+            if (i == LAST_X && j == LAST_Y) {
+                // Displays the last shot in colour with the Ansi Code
+                printf("\033[1;33m%c \033[0m", grid[i][j]);
+            }
+            else {
+                switch (grid[i][j]) {
+					case '-':
+						printf("%c ", grid[i][j]);
+						break;
+					case 'X':
+						printf("\033[1;31m%c \033[0m", grid[i][j]);
+						break;
+					case 'O':
+						printf("\033[1;34m%c \033[0m", grid[i][j]);
+                        break;
+					default:
+						printf("\033[1;32m%c \033[0m", grid[i][j]);
+						break;
+				}
+            }
         }
     }
     printf("\n");
@@ -370,7 +390,9 @@ void waiting_screen(char grid[DIM][DIM], char grid_enemy[DIM][DIM], char shots_e
         printf("Player %d won!\n", PLAYER);
         *end = true;
     } else if (strcmp(state, "INVALID") != 0) {
-        shoot(grid, shots_enemy, health, state[0] - '0', state[1] - '0', !DEBUG);
+        LAST_X = state[0] - '0';
+		LAST_Y = state[1] - '0';
+        shoot(grid, shots_enemy, health, LAST_X, LAST_Y, !DEBUG);
         clear();
         printf("Your fleet grid:\n");
         display_grid(grid);
@@ -381,9 +403,10 @@ void waiting_screen(char grid[DIM][DIM], char grid_enemy[DIM][DIM], char shots_e
 }
 
 void play(const char* ip_address, bool debug) {
-    SOCKET_FD = connect_to_server(ip_address, debug);
+    printf("Connecting to %s...\n", ip_address);
+    SOCKET_FD = connection_loop(ip_address, debug);
     int turn;
-	if (SOCKET_FD >= 0) {
+	if (SOCKET_FD != INVALID_SOCKET) {
 		char recv_buffer[MSG_LEN] = { 0 };
 		server_communication_handler(SOCKET_FD, &recv_buffer, 3, "Error connecting to server.");
         PLAYER = recv_buffer[0] - '0';

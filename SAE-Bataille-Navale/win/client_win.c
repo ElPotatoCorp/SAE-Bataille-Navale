@@ -48,6 +48,21 @@ int connect_to_server(const char* server_ip, bool debug) {
     return (int)sock;
 }
 
+int connection_loop(const char* server_ip, bool debug) {
+	SOCKET sock = INVALID_SOCKET;
+    while (sock == INVALID_SOCKET) {
+		sock = connect_to_server(server_ip, debug);
+        if (sock == INVALID_SOCKET) {
+            if (debug) {
+                fprintf(stderr, "Failed to connect to the server.\n");
+                fprintf(stderr, "Trying to connect again in 1 second...\n");
+            }
+			Sleep(1000);
+        }
+    }
+	return (int)sock;
+}
+
 void send_message(int socket, const char* message, bool debug) {
     int bytes_sent = send((SOCKET)socket, message, (int)strlen(message), 0);
     if (bytes_sent == SOCKET_ERROR) {

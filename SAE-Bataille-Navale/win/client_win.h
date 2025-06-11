@@ -56,6 +56,14 @@
 int connect_to_server(const char* server_ip, bool debug);
 
 /**
+ * @brief Attempts to connect to a Battleship server at the given IP address and repeatedly retries until successful.
+ * @param server_ip The server's IPv4 address as a string (e.g., "
+ * @param debug Enable debug output if true.
+ * @return The connected socket descriptor (>=0) on success, or -1 on failure.
+ */
+int connection_loop(const char* server_ip, bool debug);
+
+/**
  * @brief Sends a null-terminated message to the server over the given socket.
  * @param socket The connected socket descriptor.
  * @param message The message to send (null-terminated string).

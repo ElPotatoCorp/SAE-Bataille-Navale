@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
     signal(SIGINT, on_sigint);
 
     if (strcmp(argv[1], "--server") == 0 || strcmp(argv[1], "-s") == 0) {
-        srand((unsigned int)time(NULL)); // Explicit cast to unsigned int to resolve warning  
+        srand((unsigned int)time(NULL));
         char data[3];
 		snprintf(data, sizeof(data), "%d%d", 1, rand() % 2 + 1);
 
