@@ -1,6 +1,6 @@
 #ifdef _WIN32
 
-#include "server_win.h"   // Custom header for Windows server-side code
+#include "server_win.h" // Custom header for Windows server-side code
 
 SOCKET global_player1_fd = INVALID_SOCKET; // Global: used for cleanup/signaling on SIGINT
 SOCKET global_player2_fd = INVALID_SOCKET;
@@ -22,7 +22,7 @@ void initialize_winsock(void) {
 }
 
 // Creates, binds, and listens on a TCP socket on any interface at PORT.
-// Returns the listening socket (SOCKET) or exits on error.
+// Returns the listening socket (int) or exits on error.
 SOCKET create_listening_socket(void) {
     SOCKET server_fd;
     struct sockaddr_in addr;
@@ -69,6 +69,24 @@ void send_server_message(SOCKET client_fd, char* message, bool debug) {
         if (debug) fprintf(stderr, "Failed to send player number: %d\n", WSAGetLastError());
         closesocket(client_fd);
     }
+}
+
+// Receives a message from the specified client socket.
+// Returns the number of bytes received, 0 if client disconnected, or -1 on error.
+// The buffer must be at least MSG_LEN in size.
+int receive_client_message(SOCKET client_fd, char* buffer, int bufsize, int debug) {
+    int n = recv(client_fd, buffer, bufsize - 1, 0);
+    if (n == SOCKET_ERROR) {
+        if (debug) fprintf(stderr, "recv() failed: %d\n", WSAGetLastError());
+        return -1;
+    }
+    if (n == 0) {
+        if (debug) fprintf(stderr, "Client disconnected while receiving\n");
+        return 0;
+    }
+    buffer[n] = '\0'; // Null-terminate for string use (safe if buffer is MSG_LEN+1)
+    if (debug) printf("Received (%d bytes): %s\n", n, buffer);
+    return n;
 }
 
 // Forwards a message from source_fd to dest_fd. Returns bytes relayed or -1 on error/disconnect.

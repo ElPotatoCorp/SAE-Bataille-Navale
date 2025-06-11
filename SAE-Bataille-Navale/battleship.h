@@ -154,6 +154,20 @@ bool shoot(char enemyGrid[DIM][DIM], char shotsGrid[DIM][DIM], int* shipHealth, 
 void server_communication_handler(int socket, char* buffer, int bufsize, const char* message);
 
 /**
+ * @brief Sends a message to the opponent.
+ * @param info The message to send.
+ */
+void send_info_to_opponent(char* info);
+
+/**
+ * @brief Receives a message from the opponent.
+ * @param buffer Buffer to store the received message.
+ * @param bufsize Size of the buffer.
+ * @param error_message Error message to display if reception fails.
+ */
+void receive_info_from_opponent(char* buffer, int bufsize, const char* error_message);
+
+/**
  * @brief Displays the player's placement screen.
  * @param grid The player's grid.
  * @param fleet Array of ships.
@@ -183,9 +197,11 @@ void waiting_screen(char grid[DIM][DIM], char grid_enemy[DIM][DIM], char shots[D
 /**
  * @brief Main game loop controller.
  * @param player Player number.
+ * @param restarted If true, the game is restarted.
+ * @param host_mode Host mode flag.
  * @param ip_address IP address of the server (for network play).
  * @param debug Enable debug output if true.
  */
-void play(const char *ip_address, bool debug);
+void play(const char *ip_address, bool restarted, bool host_mode, bool debug);
 
 #endif // BATTLESHIP_H

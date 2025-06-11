@@ -3,15 +3,16 @@
 int SOCKET_FD;
 int PLAYER;
 const char *IP_ADDRESS;
+bool HOST_MODE;
 bool DEBUG;
 int LAST_X = -1, LAST_Y = -1;
 
 void clear() {  
-    #ifdef _WIN32
+#ifdef _WIN32
     system("cls");
-    #elif __linux__
+#elif __linux__
     system("clear");
-    #endif
+#endif
 }
 
 void game_pause() {
@@ -331,6 +332,16 @@ void server_communication_handler(int socket, char* buffer, int bufsize, const c
 	}
 }
 
+void send_info_to_opponent(char *info) {
+    if (HOST_MODE) send_server_message(SOCKET_FD, info, DEBUG);
+    else send_message(SOCKET_FD, info, DEBUG);
+}
+
+void receive_info_from_opponent(char *buffer, int bufsize, const char *error_message) {
+    if (HOST_MODE) receive_client_message(SOCKET_FD, buffer, bufsize, DEBUG);
+	else server_communication_handler(SOCKET_FD, buffer, bufsize, error_message);
+}
+
 void placement_screen(char grid[DIM][DIM], Ship fleet[5], char enemy_grid[DIM][DIM]) {
     char grid_str[DIM * DIM + 1];
     placement(grid, PLAYER, fleet);
@@ -340,8 +351,8 @@ void placement_screen(char grid[DIM][DIM], Ship fleet[5], char enemy_grid[DIM][D
     printf("Waiting for other player...\n");
     fflush(stdout);
 
-    send_message(SOCKET_FD, grid_str, DEBUG);
-    server_communication_handler(SOCKET_FD, grid_str, DIM * DIM + 1, "Error receiving grid.");
+    send_info_to_opponent(grid_str);
+    receive_info_from_opponent(grid_str, DIM * DIM + 1, "Error receiving grid.");
     string_to_grid(grid_str, enemy_grid);
     if (DEBUG) game_pause();
 }
@@ -355,7 +366,7 @@ void action_screen(char grid[DIM][DIM], char shots[DIM][DIM], int *health, bool 
         printf("Invalid coordinates.\n");
         game_pause();
 
-        send_message(SOCKET_FD, "INVALID", DEBUG);
+        send_info_to_opponent("INVALID");
 
         free(coord);
         return;
@@ -367,10 +378,10 @@ void action_screen(char grid[DIM][DIM], char shots[DIM][DIM], int *health, bool 
     if (health['#'] == 0 && health['@'] == 0 && health['%'] == 0 && health['&'] == 0 && health['$'] == 0) {
         printf("Player %d won!\n", PLAYER);
         *end = true;
-        send_message(SOCKET_FD, "END", DEBUG);
+        send_info_to_opponent("END");
     } else {
         game_pause();
-        send_message(SOCKET_FD, coord_to_string(coord), DEBUG);
+        send_info_to_opponent(coord_to_string(coord));
     }
 
     free(coord);
@@ -381,7 +392,7 @@ void waiting_screen(char grid[DIM][DIM], char grid_enemy[DIM][DIM], char shots_e
     display_grid(grid);
 
     char state[MSG_LEN] = { 0 };
-	server_communication_handler(SOCKET_FD, state, MSG_LEN - 1,"Error receiving state.");
+    receive_info_from_opponent(state, MSG_LEN - 1,"Error receiving state.");
 
     if (strcmp(state, "END") == 0) {
         clear();
@@ -402,18 +413,28 @@ void waiting_screen(char grid[DIM][DIM], char grid_enemy[DIM][DIM], char shots_e
     if (!*end) game_pause();
 }
 
-void play(const char* ip_address, bool debug) {
-    printf("Connecting to %s...\n", ip_address);
-    SOCKET_FD = connection_loop(ip_address, debug);
+void play(const char* ip_address, bool restarted, bool host_mode, bool debug) {
     int turn;
-	if (SOCKET_FD != INVALID_SOCKET) {
-		char recv_buffer[MSG_LEN] = { 0 };
-		server_communication_handler(SOCKET_FD, recv_buffer, 3, "Error connecting to server.");
-        PLAYER = recv_buffer[0] - '0';
-        turn = recv_buffer[1] - '0';
-	}
-    IP_ADDRESS = ip_address;
-    DEBUG = debug;
+	HOST_MODE = host_mode;
+    if (!restarted && !HOST_MODE) {
+        printf("Connecting to %s...\n", ip_address);
+        SOCKET_FD = connection_loop(ip_address, debug);
+        if (SOCKET_FD != INVALID_SOCKET) {
+            char recv_buffer[MSG_LEN] = { 0 };
+            receive_info_from_opponent(recv_buffer, 3, "Error connecting to server.");
+            PLAYER = recv_buffer[0] - '0';
+            turn = recv_buffer[1] - '0';
+        }
+        IP_ADDRESS = ip_address;
+        DEBUG = debug;
+    }
+    else {
+#ifdef _WIN32
+		sscanf_s(ip_address, "%d %d", &turn, &SOCKET_FD);
+#elif __linux__
+		sscanf(ip_address, "%d %d", &turn, &SOCKET_FD);
+#endif
+    }
 
     char grid_P1[DIM][DIM], grid_P2[DIM][DIM];
     char shots_P1[DIM][DIM], shots_P2[DIM][DIM];
@@ -457,6 +478,4 @@ void play(const char* ip_address, bool debug) {
         }
         turn = (turn == 1) ? 2 : 1;
     }
-
-    close_connection(SOCKET_FD, DEBUG);
 }

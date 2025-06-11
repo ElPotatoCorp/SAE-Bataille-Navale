@@ -68,6 +68,15 @@ SOCKET accept_client(SOCKET server_fd, const char* player_name, bool debug);
 void send_server_message(SOCKET client_fd, char* message, bool debug);
 
 /**
+ * @brief Receives a message from a client socket.
+ * @param client_fd The client socket descriptor.
+ * @param buffer Buffer to store the received message (must be at least MSG_LEN bytes).
+ * @param debug Enable debug output if true.
+ * @return Number of bytes received, or -1 on error/disconnect.
+ */
+int receive_client_message(SOCKET client_fd, char* buffer, int bufsize, int debug);
+
+/**
  * @brief Sends a "404" disconnect message to a socket and closes it.
  * @param fd The socket descriptor to notify and close.
  */
