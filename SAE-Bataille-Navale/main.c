@@ -47,10 +47,13 @@ int main(int argc, char *argv[]) {
         char data[3];
 		snprintf(data, sizeof(data), "%d%d", 1, rand() % 2 + 1);
 
+#ifdef _WIN32
         initialize_winsock();
-        SOCKET server_fd = create_listening_socket();
-        SOCKET player1_fd = accept_client(server_fd, "Player 1", debug);
-        SOCKET player2_fd = accept_client(server_fd, "Player 2", debug);
+#endif
+
+        int server_fd = create_listening_socket();
+        int player1_fd = accept_client(server_fd, "Player 1", debug);
+        int player2_fd = accept_client(server_fd, "Player 2", debug);
 
 		send_message(player1_fd, data, debug);
         data[0] = 2 + '0';

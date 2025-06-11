@@ -67,7 +67,7 @@ int connection_loop(const char* server_ip, bool debug) {
                 fprintf(stderr, "Failed to connect to the server.\n");
                 fprintf(stderr, "Trying to connect again in 1 second...\n");
             }
-            Sleep(1000); // Sleep for 1000ms (Windows only).
+            Sleep(1000);
         }
     }
     return (int)sock;

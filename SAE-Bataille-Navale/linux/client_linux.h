@@ -21,13 +21,17 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
+#ifndef INVALID_SOCKET
+#define INVALID_SOCKET -1
+#endif // INVALID_SOCKET
+
 #ifndef PORT
 #define PORT IPPORT_USERRESERVED	/**< TCP port for the Battleship server. */
-#endif
+#endif // PORT
 
 #ifndef MSG_LEN
 #define MSG_LEN 256					/**< Maximum message length for network communication. */
-#endif
+#endif // MSG_LEN
 
  /**
   * @brief Connects to the Battleship server.
@@ -36,6 +40,14 @@
   * @return Socket descriptor on success, or -1 on failure.
   */
 int connect_to_server(const char* server_ip, bool debug);
+
+/**
+ * @brief Attempts to connect to a Battleship server at the given IP address and repeatedly retries until successful.
+ * @param server_ip The server's IPv4 address as a string (e.g., "
+ * @param debug Enable debug output if true.
+ * @return The connected socket descriptor (>=0) on success, or -1 on failure.
+ */
+int connection_loop(const char* server_ip, bool debug);
 
 /**
  * @brief Sends a message through the given socket.

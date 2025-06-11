@@ -3,6 +3,7 @@
 #ifndef SERVER_LINUX_H
 #define SERVER_LINUX_H
 
+#include <sys/select.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -13,13 +14,17 @@
 #include <stdbool.h>
 #include <signal.h>
 
+#ifndef INVALID_SOCKET
+#define INVALID_SOCKET -1
+#endif // INVALID_SOCKET
+
 #ifndef PORT
 #define PORT IPPORT_USERRESERVED	/**< TCP port for the Battleship server. */
-#endif
+#endif // PORT
 
 #ifndef MSG_LEN
 #define MSG_LEN 256					/**< Maximum message length for network communication. */
-#endif
+#endif // MSG_LEN
 
 void error_exit(const char* msg);
 int create_listening_socket(void);

@@ -1,15 +1,15 @@
 #include "battleship.h"
 
-SOCKET SOCKET_FD;
+int SOCKET_FD;
 int PLAYER;
 const char *IP_ADDRESS;
 bool DEBUG;
 int LAST_X = -1, LAST_Y = -1;
 
-void clear() {
+void clear() {  
     #ifdef _WIN32
     system("cls");
-    #elif _linux_
+    #elif __linux__
     system("clear");
     #endif
 }
@@ -33,7 +33,7 @@ void display_grid(char grid[DIM][DIM]) {
         printf("\n%c ", 'A' + i);
         for (int j = 0; j < DIM; j++) {
             if (i == LAST_X && j == LAST_Y) {
-                // Displays the last shot in colour with the Ansi Code
+                // Displays the last shot in color with the Ansi Code
                 printf("\033[1;33m%c \033[0m", grid[i][j]);
             }
             else {
@@ -341,7 +341,7 @@ void placement_screen(char grid[DIM][DIM], Ship fleet[5], char enemy_grid[DIM][D
     fflush(stdout);
 
     send_message(SOCKET_FD, grid_str, DEBUG);
-    server_communication_handler(SOCKET_FD, &grid_str, DIM * DIM + 1, "Error receiving grid.");
+    server_communication_handler(SOCKET_FD, grid_str, DIM * DIM + 1, "Error receiving grid.");
     string_to_grid(grid_str, enemy_grid);
     if (DEBUG) game_pause();
 }
@@ -381,7 +381,7 @@ void waiting_screen(char grid[DIM][DIM], char grid_enemy[DIM][DIM], char shots_e
     display_grid(grid);
 
     char state[MSG_LEN] = { 0 };
-	server_communication_handler(SOCKET_FD, &state, MSG_LEN - 1,"Error receiving state.");
+	server_communication_handler(SOCKET_FD, state, MSG_LEN - 1,"Error receiving state.");
 
     if (strcmp(state, "END") == 0) {
         clear();
@@ -408,7 +408,7 @@ void play(const char* ip_address, bool debug) {
     int turn;
 	if (SOCKET_FD != INVALID_SOCKET) {
 		char recv_buffer[MSG_LEN] = { 0 };
-		server_communication_handler(SOCKET_FD, &recv_buffer, 3, "Error connecting to server.");
+		server_communication_handler(SOCKET_FD, recv_buffer, 3, "Error connecting to server.");
         PLAYER = recv_buffer[0] - '0';
         turn = recv_buffer[1] - '0';
 	}
