@@ -62,13 +62,24 @@ Prérequis :
 - [MinGW-w64](https://www.mingw-w64.org/) ou autre compilateur C compatible
 - [Git](https://git-scm.com/)
 
-Compilation manuelle :
+#### 🟦 Compilation avec Visual Studio 2022
+
+> 🎯 **Solution toute prête :**  
+> Le projet contient une solution Visual Studio (`.sln`) compatible avec Visual Studio 2022 (et ultérieur).  
+> Il suffit d’ouvrir le fichier `SAE-Bataille-Navale.sln` avec Visual Studio, de sélectionner la configuration souhaitée (`Debug` ou `Release`) et de cliquer sur **"Générer"**.  
+> Le projet est automatiquement configuré pour compiler avec le compilateur C++ de VS2022.
+>
+> - **Aucune ligne de commande requise**
+> - Idéal pour les environnements Windows récents
+> - Prend en charge le débogage graphique et la gestion des dépendances
+
+#### Compilation manuelle :
 ```bash
 git clone https://github.com/ElPotatoCorp/SAE-Bataille-Navale.git
 cd SAE-Bataille-Navale
 gcc -o main.exe main.c battleship.c win/server_win.c win/client_win.c -lws2_32
 ```
-> ⚠️ **Attention :**  
+> ⚠️ **Attention :**  
 > Si vous voyez une erreur similaire à :
 > ```
 > win/client_win.c: In function 'connect_to_server':
@@ -110,32 +121,56 @@ gcc -o main main.c battleship.c linux/server_linux.c linux/client_linux.c
 
 ## 🚦 Lancement du jeu
 
-Pour lancer le jeu, chaque joueur doit exécuter la commande suivante :
+Le lancement du jeu se fait désormais via une interface en ligne de commande plus flexible. Selon votre rôle (serveur ou joueur), vous pouvez démarrer le programme avec différents arguments.
+
+### Usage général
 
 ```bash
-main.exe [ip_address_opposant] [player]
+main.exe [--server | -s] [--debug]
+main.exe [--player | -p] <ip_address> [--debug]
+main.exe [--player | -p] [--host | -h] [--debug]
+
 # ou, sous Linux :
-./main [ip_address_opposant] [player]
+./main [--server | -s] [--debug]
+./main [--player | -p] <ip_address> [--debug]
+./main [--player | -p] [--host | -h] [--debug]
 ```
 
-- `[ip_address_opposant]` : l’adresse IP de l’autre joueur (votre adversaire) sur le réseau local.
-- `[player]` : le numéro du joueur (`1` ou `2`).  
-  → Le joueur 1 et le joueur 2 doivent choisir un numéro différent, et chacun doit renseigner l’adresse IP de l’autre.
+### Options
 
-**Exemples :**
-- Sur l’ordinateur du joueur 1 (l’adresse IP du joueur 2 est `192.168.1.42`) :
+- `--server`, `-s` : Démarre en mode serveur (relai pour deux joueurs)
+- `--player`, `-p <ip>` : Démarre en mode joueur et se connecte à un serveur à l’adresse `<ip>`
+- `--player`, `-p --host`, `-h` : Démarre en mode joueur et héberge la partie (attend la connexion d’un autre joueur)
+- `--debug` : Active l’affichage des informations de debug
+- `--help`, `-h` : Affiche l’aide
+
+### Exemples
+
+- Démarrer le serveur de relais (à exécuter sur l’ordinateur qui fera office de serveur) :
   ```bash
-  main.exe 192.168.1.42 1
-  ```
-- Sur l’ordinateur du joueur 2 (l’adresse IP du joueur 1 est `192.168.1.17`) :
-  ```bash
-  ./main 192.168.1.17 2
+  main.exe --server --debug
+  # ou
+  ./main -s
   ```
 
-> ℹ️ **Remarque :**  
-> Il n’est pas nécessaire de lancer les deux jeux exactement au même moment.  
-> Chaque instance attendra patiemment la connexion de son adversaire.  
-> Une fois la connexion établie, suivez les instructions à l’écran pour placer vos bateaux et commencer la partie !
+- Démarrer un joueur qui se connecte à un serveur :
+  ```bash
+  main.exe --player 192.168.1.42
+  # ou
+  ./main -p 192.168.1.42 --debug
+  ```
+
+- Démarrer un joueur qui héberge la partie (mode "host") :
+  ```bash
+  main.exe --player --host
+  # ou
+  ./main -p -h
+  ```
+
+> ℹ️ **Remarque :**
+> - Le serveur doit être lancé avant les joueurs.
+> - Les joueurs peuvent se connecter soit à un serveur "relai" central, soit se connecter entre eux si l'un d'eux utilise le mode `--host`.
+> - Une fois la connexion établie, suivez les instructions à l’écran pour placer vos bateaux et commencer la partie !
 
 ---
 
