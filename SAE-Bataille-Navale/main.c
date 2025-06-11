@@ -70,12 +70,13 @@ int main(int argc, char *argv[]) {
     }
     else if (strcmp(argv[1], "--player") == 0 || strcmp(argv[1], "-p") == 0) {
         char *ip_address = NULL;
+        int turn = rand() % 2 + 1;
 		bool host_mode;
         if (strcmp(argv[2], "--host") == 0 || strcmp(argv[2], "-h") == 0) {
             host_mode = true;
             srand((unsigned int)time(NULL));
             char data[3];
-            snprintf(data, sizeof(data), "%d%d", 2, rand() % 2 + 1);
+            snprintf(data, sizeof(data), "%d%d", 2, turn);
 
 #ifdef _WIN32
             initialize_winsock();
@@ -86,7 +87,10 @@ int main(int argc, char *argv[]) {
 
             send_message(player2_fd, data, debug);
 
-            snprintf(ip_address, MSG_LEN, "%d %d", data[1], player2_fd); // Exploit the fact that ip_address is a set of characters to drop who's turn is it and the player's socket
+            char write_on_ip_slot[MSG_LEN];
+            snprintf(write_on_ip_slot, MSG_LEN, "%d %d", turn, player2_fd); // Exploit the fact that ip_address is a set of characters to drop who's turn is it and the player's socket
+			ip_address = write_on_ip_slot;
+            printf("Passed!");
         }
         else {
 			host_mode = false;

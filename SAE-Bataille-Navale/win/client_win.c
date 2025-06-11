@@ -41,7 +41,7 @@ int connect_to_server(const char* server_ip, bool debug) {
         fprintf(stderr, "Invalid server IP address!\n");
         closesocket(sock); // Use closesocket on Windows.
         winsock_cleanup();
-        return -1;
+		exit(EXIT_FAILURE);
     }
 
     // Attempt to connect to the server.

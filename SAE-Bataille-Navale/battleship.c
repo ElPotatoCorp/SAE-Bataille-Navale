@@ -428,7 +428,8 @@ void play(const char* ip_address, bool restarted, bool host_mode, bool debug) {
         IP_ADDRESS = ip_address;
         DEBUG = debug;
     }
-    else {
+    else if (HOST_MODE) {
+        PLAYER = 1;
 #ifdef _WIN32
 		sscanf_s(ip_address, "%d %d", &turn, &SOCKET_FD);
 #elif __linux__
