@@ -40,6 +40,8 @@ int main(int argc, char *argv[]) {
 
     signal(SIGINT, on_sigint);
 
+    clear();
+
     if (strcmp(argv[1], "--server") == 0 || strcmp(argv[1], "-s") == 0) {
         srand((unsigned int)time(NULL));
         char data[3];
@@ -59,8 +61,6 @@ int main(int argc, char *argv[]) {
     }
     else if (strcmp(argv[1], "--player") == 0 || strcmp(argv[1], "-p") == 0) {
         char *ip_address = argv[2];
-
-        clear();
 
         play(ip_address, debug);
     }
