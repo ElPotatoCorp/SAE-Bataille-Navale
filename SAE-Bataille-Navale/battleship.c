@@ -66,12 +66,15 @@ int *get_coord(void) {
             continue;
 
 #ifdef _WIN32
-        if (sscanf_s(line, " %c %d", &letter, (unsigned int)sizeof(letter), &number) == 2 ||
-            sscanf_s(line, " %c%d", &letter, (unsigned int)sizeof(letter), &number) == 2) {
+        if (!(sscanf_s(line, " %c %d", &letter, (unsigned int)sizeof(letter), &number) == 2 || sscanf_s(line, " %c%d", &letter, (unsigned int)sizeof(letter), &number) == 2)) {
+            printf("Invalid input. Please enter a letter (A-J) and a number (0-9).\n");
+        }
 #elif __linux__
-        if (sscanf(line, " %c %d", &letter, &number) == 2 ||
-            sscanf(line, " %c%d", &letter, &number) == 2) {
+        if (!(sscanf(line, " %c %d", &letter, &number) == 2 || sscanf(line, " %c%d", &letter, &number) == 2)) {
+            printf("Invalid input. Please enter a letter (A-J) and a number (0-9).\n");
+        }
 #endif
+        else {
             letter = toupper(letter);
             if (letter >= 'A' && letter <= 'J') {
                 coord[0] = letter - 'A';
@@ -89,8 +92,6 @@ int *get_coord(void) {
                 continue;
             }
             break;
-        } else {
-            printf("Invalid input. Please enter a letter (A-J) and a number (0-9).\n");
         }
     }
 
@@ -163,13 +164,18 @@ void placement(char grid[DIM][DIM], int player, Ship fleet[]) {
         // Try to parse all values at once (case-insensitive for letter)
 #ifdef _WIN32
 		if (sscanf_s(line, "%d %c %d %d", &choice, &letter, (unsigned int)sizeof(letter), &y, &rot) == 4) {
-#elif __linux__
-        if (sscanf(line, "%d %c %d %d", &choice, &letter, &y, &rot) == 4) {
-#endif
             choice -= 1;
             x = toupper(letter) - 'A';
             if (y == 0) y = 9; else y -= 1;
-        } else {
+        }
+#elif __linux__
+        if (sscanf(line, "%d %c %d %d", &choice, &letter, &y, &rot) == 4) {
+            choice -= 1;
+            x = toupper(letter) - 'A';
+            if (y == 0) y = 9; else y -= 1;
+        }
+#endif
+        else {
             // Fallback: ask for each value individually if missing or invalid
 
             // Reset values
@@ -181,13 +187,17 @@ void placement(char grid[DIM][DIM], int player, Ship fleet[]) {
                 if (!fgets(line, sizeof(line), stdin)) continue;
 #ifdef _WIN32
 				if (sscanf_s(line, "%d", &choice) == 1) {
+                    choice -= 1;
+                }
 #elif __linux__
                 if (sscanf(line, "%d", &choice) == 1) {
-#endif
                     choice -= 1;
-                } else if (isdigit(line[0])) {
+                }
+#endif
+                else if (isdigit(line[0])) {
                     choice = line[0] - '1';
-                } else {
+                }
+                else {
                     continue;
                 }
                 if (choice < 0 || choice >= 5 || !fleet[choice].active) printf("Invalid ship. Try again.\n");
@@ -199,11 +209,13 @@ void placement(char grid[DIM][DIM], int player, Ship fleet[]) {
                 if (!fgets(line, sizeof(line), stdin)) continue;
 #ifdef _WIN32
                 if (sscanf_s(line, " %c", &letter, (unsigned int)sizeof(letter)) == 1 && isalpha(letter)) {
-#elif __linux__
-				if (sscanf(line, " %c", &letter) == 1 && isalpha(letter)) {
-#endif
                     x = toupper(letter) - 'A';
                 }
+#elif __linux__
+				if (sscanf(line, " %c", &letter) == 1 && isalpha(letter)) {
+                    x = toupper(letter) - 'A';
+                }
+#endif
                 if (x < 0 || x >= DIM) printf("Invalid letter. Try again.\n");
             }
 
@@ -213,12 +225,15 @@ void placement(char grid[DIM][DIM], int player, Ship fleet[]) {
                 if (!fgets(line, sizeof(line), stdin)) continue;
 #ifdef _WIN32
                 if (sscanf_s(line, "%d", &y) != 1) {
-#elif __linux__
-				if (sscanf(line, "%d", &y) != 1) {
-#endif
                     if (isdigit(line[0])) y = line[0] - '0';
                     else continue;
                 }
+#elif __linux__
+				if (sscanf(line, "%d", &y) != 1) {
+                    if (isdigit(line[0])) y = line[0] - '0';
+                    else continue;
+                }
+#endif
                 if (y == 0) y = 9; else y -= 1;
                 if (y < 0 || y >= DIM) printf("Invalid number. Try again.\n");
             }
@@ -306,7 +321,7 @@ void placement_screen(char grid[DIM][DIM], Ship fleet[5], char enemy_grid[DIM][D
     fflush(stdout);
 
     send_message(SOCKET_FD, grid_str, DEBUG);
-    game_error(SOCKET_FD, &grid_str, DIM * DIM + 1, "Error receiving grid.");
+    server_communication_handler(SOCKET_FD, &grid_str, DIM * DIM + 1, "Error receiving grid.");
     string_to_grid(grid_str, enemy_grid);
     if (DEBUG) game_pause();
 }
@@ -345,8 +360,8 @@ void waiting_screen(char grid[DIM][DIM], char grid_enemy[DIM][DIM], char shots_e
     printf("Your fleet grid:\n");
     display_grid(grid);
 
-    char state[MSG_LEN];
-	game_error(SOCKET_FD, &state, MSG_LEN - 1,"Error receiving state.");
+    char state[MSG_LEN] = { 0 };
+	server_communication_handler(SOCKET_FD, &state, MSG_LEN - 1,"Error receiving state.");
 
     if (strcmp(state, "END") == 0) {
         clear();
@@ -369,8 +384,8 @@ void play(const char* ip_address, bool debug) {
     SOCKET_FD = connect_to_server(ip_address, debug);
     int turn;
 	if (SOCKET_FD >= 0) {
-		char recv_buffer[MSG_LEN];
-		game_error(SOCKET_FD, &recv_buffer, 3, "Error connecting to server.");
+		char recv_buffer[MSG_LEN] = { 0 };
+		server_communication_handler(SOCKET_FD, &recv_buffer, 3, "Error connecting to server.");
         PLAYER = recv_buffer[0] - '0';
         turn = recv_buffer[1] - '0';
 	}

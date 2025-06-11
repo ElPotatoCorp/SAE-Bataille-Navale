@@ -64,7 +64,7 @@ void initialize_grid(char grid[DIM][DIM]);
  * @param grid The grid to display.
  * @param refresh If true, clears the screen before displaying.
  */
-void display_grid(char grid[DIM][DIM], bool refresh);
+void display_grid(char grid[DIM][DIM]);
 
 /**
  * @brief Converts the grid to a string buffer.
