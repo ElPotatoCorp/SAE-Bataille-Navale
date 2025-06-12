@@ -35,7 +35,7 @@ void display_grid(char grid[DIM][DIM], int x, int y) {
         printf("\n%c ", 'A' + i);
         for (int j = 0; j < DIM; j++) {
             if (i == x && j == y) {
-                printf("\033[1;33m%c \033[0m", grid[i][j]);
+                printf("\033[38;2;255;255;0m%c \033[0m", grid[i][j]);
             }
             else {
                 switch (grid[i][j]) {
@@ -43,13 +43,13 @@ void display_grid(char grid[DIM][DIM], int x, int y) {
 						printf("%c ", grid[i][j]);
 						break;
 					case 'X':
-						printf("\033[1;31m%c \033[0m", grid[i][j]);
+						printf("\033[38;2;255;0;0m%c \033[0m", grid[i][j]);
 						break;
 					case 'O':
-						printf("\033[1;34m%c \033[0m", grid[i][j]);
+						printf("\033[38;2;0;150;255m%c \033[0m", grid[i][j]);
                         break;
 					default:
-						printf("\033[1;32m%c \033[0m", grid[i][j]);
+						printf("\033[38;2;0;255;0m%c \033[0m", grid[i][j]);
 						break;
 				}
             }
