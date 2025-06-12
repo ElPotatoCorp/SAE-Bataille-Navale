@@ -82,7 +82,7 @@ int receive_client_message(SOCKET client_fd, char* buffer, int bufsize, int debu
     }
     if (n == 0) {
         if (debug) fprintf(stderr, "Client disconnected while receiving\n");
-        fprint("The other player has disconnected.");
+        printf("The other player has disconnected.");
         exit(0);
     }
     buffer[n] = '\0'; // Null-terminate for string use (safe if buffer is MSG_LEN+1)
