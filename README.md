@@ -91,9 +91,9 @@ gcc -o main.exe main.c battleship.c win/server_win.c win/client_win.c -lws2_32
 > cela signifie que votre version de MinGW ne fournit pas la fonction `inet_pton`.  
 > Pour corriger ce problème, il est recommandé de télécharger une version plus récente du compilateur via [MSYS2](https://www.msys2.org/), qui propose des versions de MinGW-w64 à jour et compatibles.
 
-> 💡 **Astuce :** Vous pouvez également utiliser le script `build_win.bat` fourni pour compiler automatiquement le projet sous Windows. Il suffit de lancer :
+> 💡 **Astuce :** Vous pouvez également utiliser le script `build_win.ps1` fourni pour compiler automatiquement le projet sous Windows. Il suffit de lancer :
 > ```
-> build_win.bat
+> build_win.ps1
 > ```
 
 ---
