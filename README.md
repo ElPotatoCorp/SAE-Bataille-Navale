@@ -168,7 +168,6 @@ main.exe [--player | -p] [--host | -h] [--debug]
   ```
 
 > ℹ️ **Remarque :**
-> - Le serveur doit être lancé avant les joueurs.
 > - Les joueurs peuvent se connecter soit à un serveur "relai" central, soit se connecter entre eux si l'un d'eux utilise le mode `--host`.
 > - Une fois la connexion établie, suivez les instructions à l’écran pour placer vos bateaux et commencer la partie !
 
