@@ -7,6 +7,8 @@ bool HOST_MODE;
 bool DEBUG;
 int LAST_X, LAST_Y;
 int LAST_OPPONENT_X, LAST_OPPONENT_Y;
+const char *SHOT_MSG;
+bool END;
 
 void clear() {  
 #ifdef _WIN32
@@ -29,30 +31,76 @@ void initialize_grid(char grid[DIM][DIM]) {
     }
 }
 
+void display_box(char c, bool highlight) {
+    if (highlight) {
+        printf("\033[38;2;255;255;0m%c \033[0m", c); // Highlighted case
+        return;
+    } 
+
+    if (END) 
+    {
+        switch (c) {
+        case 'X':
+            printf("\033[38;2;255;0;0m%c \033[0m", c); // Red for hit
+            break;
+        case 'O':
+            printf("%c ", c); // Normal case
+            break;
+        case '#': // Carrier (size 5) - darkest red
+            printf("\033[38;2;120;0;0m%c \033[0m", c);
+            break;
+        case '@': // Battleship (size 4)
+            printf("\033[38;2;170;0;0m%c \033[0m", c);
+            break;
+        case '%': // Cruiser (size 3)
+            printf("\033[38;2;210;0;0m%c \033[0m", c);
+            break;
+        case '&': // Submarine (size 3)
+            printf("\033[38;2;230;40;40m%c \033[0m", c);
+            break;
+        case '$': // Destroyer (size 2) - brightest red
+            printf("\033[38;2;255;80;80m%c \033[0m", c);
+            break;
+        default:
+            printf("\033[38;2;0;150;255m%c \033[0m", c); // Default color for empty cells
+            break;
+        }
+    }
+
+    switch (c) {
+        case 'X':
+            printf("\033[38;2;255;0;0m%c \033[0m", c); // Red for hit
+            break;
+        case 'O':
+            printf("%c ", c); // Normal case
+            break;
+        case '#': // Carrier (size 5) - darkest green
+            printf("\033[38;2;0;80;0m%c \033[0m", c);
+            break;
+        case '@': // Battleship (size 4)
+            printf("\033[38;2;0;120;0m%c \033[0m", c);
+            break;
+        case '%': // Cruiser (size 3)
+            printf("\033[38;2;0;170;0m%c \033[0m", c);
+            break;
+        case '&': // Submarine (size 3)
+            printf("\033[38;2;0;200;0m%c \033[0m", c);
+            break;
+        case '$': // Destroyer (size 2) - brightest green
+            printf("\033[38;2;0;255;0m%c \033[0m", c);
+            break;
+        default:
+            printf("\033[38;2;0;150;255m%c \033[0m", c); // Default color for empty cells
+            break;
+    }
+}
+
 void display_grid(char grid[DIM][DIM], int x, int y) {
     printf("  1 2 3 4 5 6 7 8 9 0");
     for (int i = 0; i < DIM; i++) {
         printf("\n%c ", 'A' + i);
         for (int j = 0; j < DIM; j++) {
-            if (i == x && j == y) {
-                printf("\033[38;2;255;255;0m%c \033[0m", grid[i][j]);
-            }
-            else {
-                switch (grid[i][j]) {
-					case '-':
-						printf("%c ", grid[i][j]);
-						break;
-					case 'X':
-						printf("\033[38;2;255;0;0m%c \033[0m", grid[i][j]);
-						break;
-					case 'O':
-						printf("\033[38;2;0;150;255m%c \033[0m", grid[i][j]);
-                        break;
-					default:
-						printf("\033[38;2;0;255;0m%c \033[0m", grid[i][j]);
-						break;
-				}
-            }
+            display_box(grid[i][j], (x == i && y == j));
         }
     }
     printf("\n");
@@ -81,8 +129,7 @@ void string_to_grid(const char *buffer, char grid[DIM][DIM]) {
     }
 }
 
-int *get_coord(void) {
-    int *coord = malloc(2 * sizeof(int));
+void get_coord(int coord[2]) {
     char line[128];
     char letter = 0;
     int number = -1;
@@ -121,8 +168,6 @@ int *get_coord(void) {
             break;
         }
     }
-
-    return coord;
 }
 
 char *coord_to_string(int *coord) {  
@@ -142,10 +187,6 @@ char *coord_to_string(int *coord) {
     coord_str[2] = '\0';  
 
     return coord_str;  
-}
-
-bool is_valid(int i, int j) {
-    return i >= 0 && i < DIM && j >= 0 && j < DIM;
 }
 
 bool can_be_placed(int size, int rot, int i, int j, char grid[DIM][DIM]) {
@@ -191,8 +232,30 @@ void placement(char grid[DIM][DIM], int player, Ship fleet[]) {
         // Try to parse all values at once (case-insensitive for letter)
 #ifdef _WIN32
 		if (sscanf_s(line, "%d %c %d %d", &choice, &letter, (unsigned int)sizeof(letter), &y, &rot) == 4) {
+            if (choice < 1 || choice > 5 || !fleet[choice - 1].active) {
+                clear();
+                printf("Invalid ship number. Try again.\n");
+                continue;
+            }
+            letter = toupper(letter);
+            if (letter < 'A' || letter > 'J') {
+                clear();
+                printf("Invalid letter. Try again.\n");
+                continue;
+            }
+            if (y < 0 || y > 9) {
+                clear();
+                printf("Invalid number. Try again.\n");
+                continue;
+            }
+            if (rot < 1 || rot > 4) {
+                clear();
+                printf("Invalid rotation. Try again.\n");
+                continue;
+            }
+
             choice -= 1;
-            x = toupper(letter) - 'A';
+            x = letter - 'A';
             if (y == 0) y = 9; else y -= 1;
         }
 #elif __linux__
@@ -296,30 +359,27 @@ void placement(char grid[DIM][DIM], int player, Ship fleet[]) {
     }
 }
 
-bool shoot(char enemy_grid[DIM][DIM], char shots_grid[DIM][DIM], int* ship_health, int x, int y, bool mute) {
+void shoot(char enemy_grid[DIM][DIM], char shots_grid[DIM][DIM], int* ship_health, int x, int y, bool mute) {
     if (DEBUG) printf("Shooting at (%d, %d)\n", x, y);
 
     if (shots_grid[x][y] != '-') {
-        if (!mute) printf("You already fired here.\n");
-        return false;
+        SHOT_MSG = !mute ? "Already shot here." : NULL;
+        return;
     }
 
     if (enemy_grid[x][y] != '-') {
-        if (!mute) printf("Hit!\n");
         char symbol = enemy_grid[x][y];
         shots_grid[x][y] = 'X';
         enemy_grid[x][y] = 'X';
         ship_health[symbol]--;
-        if (ship_health[symbol] == 0) {
-            if (!mute) printf("Ship sunk!\n");
-        }
-        return true;
+        SHOT_MSG = !mute ? (ship_health[symbol] == 0 ? "Sunk!" : "Hit!") : NULL;
+        return;
     }
     else {
-        if (!mute) printf("Miss.\n");
         enemy_grid[x][y] = 'O';
         shots_grid[x][y] = 'O';
-        return false;
+        SHOT_MSG = !mute ? "Miss..." : NULL;
+        return;
     }
 }
 
@@ -363,62 +423,47 @@ void placement_screen(char grid[DIM][DIM], Ship fleet[5], char enemy_grid[DIM][D
     if (DEBUG) game_pause();
 }
 
-void action_screen(char grid[DIM][DIM], char grid_enemy[DIM][DIM], char shots[DIM][DIM], int *health, bool *end) {
+void action_screen(char grid[DIM][DIM], char shots[DIM][DIM], char grid_enemy[DIM][DIM], char shots_enemy[DIM][DIM], int *health) {
     printf("Your board:\n");
     display_board(grid, shots, LAST_OPPONENT_X, LAST_OPPONENT_Y, LAST_X, LAST_Y);
 
-    int *coord = get_coord();
-    if (!is_valid(coord[0], coord[1])) {
-        printf("Invalid coordinates.\n");
-        game_pause();
-
-        send_info_to_opponent("INVALID");
-
-        free(coord);
-        return;
-    }
-    else {
-        LAST_X = coord[0];
-        LAST_Y = coord[1];
-        shoot(grid_enemy, shots, health, LAST_X, LAST_Y, false);
-    }
+    int coord[2] = { 0 };
+    LAST_X = coord[0];
+    LAST_Y = coord[1];
+    shoot(grid_enemy, shots, health, LAST_X, LAST_Y, false);
     
     if (health['#'] == 0 && health['@'] == 0 && health['%'] == 0 && health['&'] == 0 && health['$'] == 0) {
+        END = true;
+
+        printf("\n--- Game Over : You won ! ---\n");
+        printf("Enemy's fleet:\n");
+        display_board(grid_enemy, shots_enemy, LAST_OPPONENT_X, LAST_OPPONENT_Y, LAST_X, LAST_Y);
         printf("Player %d won!\n", PLAYER);
-        *end = true;
         send_info_to_opponent("END");
     } else {
-        game_pause();
         send_info_to_opponent(coord_to_string(coord));
     }
-
-    free(coord);
 }
 
-void waiting_screen(char grid[DIM][DIM], char shots[DIM][DIM], char grid_enemy[DIM][DIM], char shots_enemy[DIM][DIM], int *health, bool *end) {
+void waiting_screen(char grid[DIM][DIM], char shots[DIM][DIM], char grid_enemy[DIM][DIM], char shots_enemy[DIM][DIM], int *health) {
     printf("Your board:\n");
     display_board(grid, shots, LAST_OPPONENT_X, LAST_OPPONENT_Y, LAST_X, LAST_Y);
+    printf("%s\n", SHOT_MSG);
 
     char state[MSG_LEN] = { 0 };
     receive_info_from_opponent(state, MSG_LEN - 1,"Error receiving state.");
 
     if (strcmp(state, "END") == 0) {
-        if (!DEBUG) clear();
+        printf("\n--- Game Over : You lost... ---\n");
 		printf("Enemy's board:\n");
-        display_grid(grid_enemy, -1, -1);
+        display_board(grid_enemy, shots_enemy, LAST_OPPONENT_X, LAST_OPPONENT_Y, LAST_X, LAST_Y);
         printf("Player %d won!\n", PLAYER);
-        *end = true;
-    } else if (strcmp(state, "INVALID") != 0) {
-        LAST_OPPONENT_X = state[0] - '0';
-		LAST_OPPONENT_Y = state[1] - '0';
-        shoot(grid, shots_enemy, health, LAST_OPPONENT_X, LAST_OPPONENT_Y, !DEBUG);
-        if (!DEBUG) clear();
-        printf("Your board:\n");
-        display_board(grid, shots, LAST_OPPONENT_X, LAST_OPPONENT_Y, LAST_X, LAST_Y);
+        game_pause();
+
+        END = true;
     }
 
     if (DEBUG) printf("State: %s\n", state);
-    if (!*end) game_pause();
 }
 
 void play(const char* ip_address, bool restarted, bool host_mode, bool debug) {
@@ -426,6 +471,8 @@ void play(const char* ip_address, bool restarted, bool host_mode, bool debug) {
     LAST_Y = -1;
     LAST_OPPONENT_X = -1;
     LAST_OPPONENT_Y = -1;
+    SHOT_MSG = NULL;
+    END = false;
 
     int turn;
 	HOST_MODE = host_mode;
@@ -473,21 +520,21 @@ void play(const char* ip_address, bool restarted, bool host_mode, bool debug) {
         placement_screen(grid_P2, fleet_P2, grid_P1);
     }
 
-    bool end = false;
-    while (!end) {
+    
+    while (!END) {
         if (!DEBUG) clear();
         printf("Player %d's turn\n", turn);
         if (turn == 1) {
             if (PLAYER == 1) {
-                action_screen(grid_P1, grid_P2, shots_P1, health_P2, &end);
+                action_screen(grid_P1, shots_P1, grid_P2, shots_P2, health_P2);
             } else {
-                waiting_screen(grid_P2, shots_P2, grid_P1, shots_P1, health_P2, &end);
+                waiting_screen(grid_P2, shots_P2, grid_P1, shots_P1, health_P2);
             }
         } else {
             if (PLAYER == 2) {
-                action_screen(grid_P2, grid_P1, shots_P2, health_P1, &end);
+                action_screen(grid_P2, shots_P2, grid_P1, shots_P1, health_P1);
             } else {
-                waiting_screen(grid_P1, shots_P1, grid_P2, shots_P2, health_P1, &end);
+                waiting_screen(grid_P1, shots_P1, grid_P2, shots_P2, health_P1);
             }
         }
         turn = (turn == 1) ? 2 : 1;

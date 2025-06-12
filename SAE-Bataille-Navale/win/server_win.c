@@ -103,7 +103,7 @@ int relay_message(SOCKET source_fd, SOCKET dest_fd) {
     return n;
 }
 
-// Sends "404" to client and closes the socket (used to indicate disconnect).
+// Sends "404" to client and closes the socket (used to indicate disconnect). Why 404? Well, because the player can't be found anymore, error 404 not found.
 void send_404_and_close(SOCKET fd) {
     const char msg[] = "404";
     if (fd != INVALID_SOCKET) {
