@@ -5,7 +5,8 @@ int PLAYER;
 const char *IP_ADDRESS;
 bool HOST_MODE;
 bool DEBUG;
-int LAST_X = -1, LAST_Y = -1;
+int LAST_X, LAST_Y;
+int LAST_OPPONENT_X, LAST_OPPONENT_Y;
 
 void clear() {  
 #ifdef _WIN32
@@ -28,13 +29,12 @@ void initialize_grid(char grid[DIM][DIM]) {
     }
 }
 
-void display_grid(char grid[DIM][DIM]) {
+void display_grid(char grid[DIM][DIM], int x, int y) {
     printf("  1 2 3 4 5 6 7 8 9 0");
     for (int i = 0; i < DIM; i++) {
         printf("\n%c ", 'A' + i);
         for (int j = 0; j < DIM; j++) {
-            if (i == LAST_X && j == LAST_Y) {
-                // Displays the last shot in color with the Ansi Code
+            if (i == x && j == y) {
                 printf("\033[1;33m%c \033[0m", grid[i][j]);
             }
             else {
@@ -56,6 +56,12 @@ void display_grid(char grid[DIM][DIM]) {
         }
     }
     printf("\n");
+}
+
+void display_board(char fleet_grid[DIM][DIM], char shot_grid[DIM][DIM], int x, int y, int x_bis, int y_bis) {
+    display_grid(fleet_grid, x, y);
+    printf("\n-----------\n");
+    display_grid(shot_grid, x_bis, y_bis);
 }
 
 void grid_to_string(char grid[DIM][DIM], char *buffer, size_t bufsize) {
@@ -163,7 +169,7 @@ void placement(char grid[DIM][DIM], int player, Ship fleet[]) {
     printf("Placement of Player %d's ships\n", player);
 
     while (true) {
-        display_grid(grid);
+        display_grid(grid, -1, -1);
 
         // Print available ships
         printf("Choose a ship (1-5):\n");
@@ -357,9 +363,9 @@ void placement_screen(char grid[DIM][DIM], Ship fleet[5], char enemy_grid[DIM][D
     if (DEBUG) game_pause();
 }
 
-void action_screen(char grid[DIM][DIM], char shots[DIM][DIM], int *health, bool *end) {
-    printf("Your shots grid:\n");
-    display_grid(shots);
+void action_screen(char grid[DIM][DIM], char grid_enemy[DIM][DIM], char shots[DIM][DIM], int *health, bool *end) {
+    printf("Your board:\n");
+    display_board(grid, shots, LAST_OPPONENT_X, LAST_OPPONENT_Y, LAST_X, LAST_Y);
 
     int *coord = get_coord();
     if (!is_valid(coord[0], coord[1])) {
@@ -372,7 +378,9 @@ void action_screen(char grid[DIM][DIM], char shots[DIM][DIM], int *health, bool 
         return;
     }
     else {
-        shoot(grid, shots, health, coord[0], coord[1], false);
+        LAST_X = coord[0];
+        LAST_Y = coord[1];
+        shoot(grid_enemy, shots, health, LAST_X, LAST_Y, false);
     }
     
     if (health['#'] == 0 && health['@'] == 0 && health['%'] == 0 && health['&'] == 0 && health['$'] == 0) {
@@ -387,26 +395,26 @@ void action_screen(char grid[DIM][DIM], char shots[DIM][DIM], int *health, bool 
     free(coord);
 }
 
-void waiting_screen(char grid[DIM][DIM], char grid_enemy[DIM][DIM], char shots_enemy[DIM][DIM], int *health, bool *end) {
-    printf("Your fleet grid:\n");
-    display_grid(grid);
+void waiting_screen(char grid[DIM][DIM], char shots[DIM][DIM], char grid_enemy[DIM][DIM], char shots_enemy[DIM][DIM], int *health, bool *end) {
+    printf("Your board:\n");
+    display_board(grid, shots, LAST_OPPONENT_X, LAST_OPPONENT_Y, LAST_X, LAST_Y);
 
     char state[MSG_LEN] = { 0 };
     receive_info_from_opponent(state, MSG_LEN - 1,"Error receiving state.");
 
     if (strcmp(state, "END") == 0) {
         clear();
-		printf("Enemy fleet grid:\n");
-        display_grid(grid_enemy);
+		printf("Enemy's board:\n");
+        display_grid(grid_enemy, -1, -1);
         printf("Player %d won!\n", PLAYER);
         *end = true;
     } else if (strcmp(state, "INVALID") != 0) {
-        LAST_X = state[0] - '0';
-		LAST_Y = state[1] - '0';
-        shoot(grid, shots_enemy, health, LAST_X, LAST_Y, !DEBUG);
+        LAST_OPPONENT_X = state[0] - '0';
+		LAST_OPPONENT_Y = state[1] - '0';
+        shoot(grid, shots_enemy, health, LAST_OPPONENT_X, LAST_OPPONENT_Y, !DEBUG);
         clear();
         printf("Your fleet grid:\n");
-        display_grid(grid);
+        display_grid(grid, LAST_OPPONENT_X, LAST_OPPONENT_Y);
     }
 
     if (DEBUG) printf("State: %s\n", state);
@@ -414,6 +422,11 @@ void waiting_screen(char grid[DIM][DIM], char grid_enemy[DIM][DIM], char shots_e
 }
 
 void play(const char* ip_address, bool restarted, bool host_mode, bool debug) {
+    LAST_X = -1;
+    LAST_Y = -1;
+    LAST_OPPONENT_X = -1;
+    LAST_OPPONENT_Y = -1;
+
     int turn;
 	HOST_MODE = host_mode;
     if (!restarted && !HOST_MODE) {
@@ -466,15 +479,15 @@ void play(const char* ip_address, bool restarted, bool host_mode, bool debug) {
         printf("Player %d's turn\n", turn);
         if (turn == 1) {
             if (PLAYER == 1) {
-                action_screen(grid_P2, shots_P1, health_P2, &end);
+                action_screen(grid_P1, grid_P2, shots_P1, health_P2, &end);
             } else {
-                waiting_screen(grid_P2, grid_P1, shots_P1, health_P2, &end);
+                waiting_screen(grid_P2, shots_P2, grid_P1, shots_P1, health_P2, &end);
             }
         } else {
             if (PLAYER == 2) {
-                action_screen(grid_P1, shots_P2, health_P1, &end);
+                action_screen(grid_P2, grid_P1, shots_P2, health_P1, &end);
             } else {
-                waiting_screen(grid_P1, grid_P2, shots_P2, health_P1, &end);
+                waiting_screen(grid_P1, shots_P1, grid_P2, shots_P2, health_P1, &end);
             }
         }
         turn = (turn == 1) ? 2 : 1;

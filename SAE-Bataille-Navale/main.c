@@ -86,11 +86,11 @@ int main(int argc, char *argv[]) {
             player2_fd = (int)accept_client(server_fd, "Player 2", debug);
 
             send_message(player2_fd, data, debug);
+            clear();
 
             char write_on_ip_slot[MSG_LEN];
             snprintf(write_on_ip_slot, MSG_LEN, "%d %d", turn, player2_fd); // Exploit the fact that ip_address is a set of characters to drop who's turn is it and the player's socket
 			ip_address = write_on_ip_slot;
-            printf("Passed!");
         }
         else {
 			host_mode = false;
@@ -101,6 +101,7 @@ int main(int argc, char *argv[]) {
             play(ip_address, restarted, host_mode, debug);
 			printf("Game over. Press enter to play again or quit with (CTRL + C)\n");
             while (getchar() != '\n');
+            clear();
 			restarted = true;
         }
     }

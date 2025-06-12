@@ -62,9 +62,21 @@ void initialize_grid(char grid[DIM][DIM]);
 /**
  * @brief Displays the grid to the console.
  * @param grid The grid to display.
- * @param refresh If true, clears the screen before displaying.
+ * @param x The X coordinate.
+ * @param y The Y coordinate.
  */
-void display_grid(char grid[DIM][DIM]);
+void display_grid(char grid[DIM][DIM], int x, int y);
+
+/**
+ * @brief Displays the board to the console.
+ * @param fleet_grid The player's fleet grid.
+ * @param shot_grid The player's shot grid.
+ * @param x The X coordinate for the player's fleet grid.
+ * @param y The Y coordinate for the player's fleet grid.
+ * @param x_bis The X coordinate for the player's shot grid.
+ * @param y_bis The Y coordinate for the player's shot grid.
+ */
+void display_board(char fleet_grid[DIM][DIM], char shot_grid[DIM][DIM], int x, int y, int x_bis, int y_bis);
 
 /**
  * @brief Converts the grid to a string buffer.
@@ -108,7 +120,7 @@ bool is_valid(int i, int j);
  * @param rot 0 = horizontal, 1 = vertical.
  * @param i Row index.
  * @param j Column index.
- * @param grid The grid.
+ * @param grid The player's fleet grid.
  * @return True if placement is possible.
  */
 bool can_be_placed(int size, int rot, int i, int j, char grid[DIM][DIM]);
@@ -120,7 +132,7 @@ bool can_be_placed(int size, int rot, int i, int j, char grid[DIM][DIM]);
  * @param i Row index.
  * @param j Column index.
  * @param symbol Ship symbol.
- * @param grid The grid.
+ * @param grid The player's fleet grid.
  */
 void place_ship(int size, int rot, int i, int j, char symbol, char grid[DIM][DIM]);
 
@@ -169,7 +181,7 @@ void receive_info_from_opponent(char* buffer, int bufsize, const char* error_mes
 
 /**
  * @brief Displays the player's placement screen.
- * @param grid The player's grid.
+ * @param grid The player's fleet grid.
  * @param fleet Array of ships.
  * @param enemy_grid The opponent's grid.
  */
@@ -177,22 +189,24 @@ void placement_screen(char grid[DIM][DIM], Ship fleet[5], char enemy_grid[DIM][D
 
 /**
  * @brief Displays the player's action screen and processes input.
- * @param grid The player's grid.
+ * @param grid The player's fleet grid.
+ * @param grid_enemy The enemy's fleet grid.
  * @param shots The player's shot grid.
  * @param health Ship health array.
  * @param end Pointer to game end flag.
  */
-void action_screen(char grid[DIM][DIM], char shots[DIM][DIM], int* health, bool* end);
+void action_screen(char grid[DIM][DIM], char grid_enemy[DIM][DIM], char shots[DIM][DIM], int *health, bool *end);
 
 /**
  * @brief Displays a waiting screen between player turns.
- * @param grid The player's grid.
- * @param grid_enemy The enemy's grid.
+ * @param grid The player's fleet grid.
  * @param shots The player's shot grid.
+ * @param grid_enemy The enemy's fleet grid.
+ * @param shots_enemy The enemy's shot grid.
  * @param health Ship health array.
  * @param end Pointer to game end flag.
  */
-void waiting_screen(char grid[DIM][DIM], char grid_enemy[DIM][DIM], char shots[DIM][DIM], int *health, bool *end);
+void waiting_screen(char grid[DIM][DIM], char shots[DIM][DIM], char grid_enemy[DIM][DIM], char shots_enemy[DIM][DIM], int *health, bool *end);
 
 /**
  * @brief Main game loop controller.
