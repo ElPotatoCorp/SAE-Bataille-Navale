@@ -193,7 +193,7 @@ bool can_be_placed(int size, int rot, int i, int j, char grid[DIM][DIM]) {
     for (int k = 0; k < size; ++k) {
         int x = i + (rot == 3 ? k : rot == 1 ? -k : 0);
         int y = j + (rot == 2 ? k : rot == 4 ? -k : 0);
-        if (!is_valid(x, y) || grid[x][y] != '-') return false;
+        if (grid[x][y] != '-') return false;
     }
     return true;
 }
