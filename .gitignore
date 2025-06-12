@@ -1017,6 +1017,7 @@ _deps
 *.dylib
 
 # Executables
+main*
 *.exe
 *.out
 *.app
