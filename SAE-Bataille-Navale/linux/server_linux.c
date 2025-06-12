@@ -73,7 +73,8 @@ int receive_client_message(int client_fd, char* buffer, int bufsize, int debug) 
     }
     if (n == 0) {
         if (debug) fprintf(stderr, "Client disconnected while receiving\n");
-        return 0;
+        fprint("The other player has disconnected.");
+        exit(0);
     }
     buffer[n] = '\0'; // Null-terminate for string use
     if (debug) printf("Received (%d bytes): %s\n", n, buffer);

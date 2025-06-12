@@ -60,7 +60,7 @@ void display_grid(char grid[DIM][DIM], int x, int y) {
 
 void display_board(char fleet_grid[DIM][DIM], char shot_grid[DIM][DIM], int x, int y, int x_bis, int y_bis) {
     display_grid(fleet_grid, x, y);
-    printf("\n-----------\n");
+    printf("---------------------\n");
     display_grid(shot_grid, x_bis, y_bis);
 }
 
@@ -285,7 +285,7 @@ void placement(char grid[DIM][DIM], int player, Ship fleet[]) {
 
         place_ship(fleet[choice].size, rot, x, y, fleet[choice].symbol, grid);
         fleet[choice].active = false;
-        clear();
+        if (!DEBUG) { clear(); printf("Check"); }
 
         // Check if all ships placed
         bool finished = true;
@@ -353,7 +353,7 @@ void placement_screen(char grid[DIM][DIM], Ship fleet[5], char enemy_grid[DIM][D
     placement(grid, PLAYER, fleet);
     grid_to_string(grid, grid_str, sizeof(grid_str));
 
-    clear();
+    if (!DEBUG) clear();
     printf("Waiting for other player...\n");
     fflush(stdout);
 
@@ -403,7 +403,7 @@ void waiting_screen(char grid[DIM][DIM], char shots[DIM][DIM], char grid_enemy[D
     receive_info_from_opponent(state, MSG_LEN - 1,"Error receiving state.");
 
     if (strcmp(state, "END") == 0) {
-        clear();
+        if (!DEBUG) clear();
 		printf("Enemy's board:\n");
         display_grid(grid_enemy, -1, -1);
         printf("Player %d won!\n", PLAYER);
@@ -412,9 +412,9 @@ void waiting_screen(char grid[DIM][DIM], char shots[DIM][DIM], char grid_enemy[D
         LAST_OPPONENT_X = state[0] - '0';
 		LAST_OPPONENT_Y = state[1] - '0';
         shoot(grid, shots_enemy, health, LAST_OPPONENT_X, LAST_OPPONENT_Y, !DEBUG);
-        clear();
-        printf("Your fleet grid:\n");
-        display_grid(grid, LAST_OPPONENT_X, LAST_OPPONENT_Y);
+        if (!DEBUG) clear();
+        printf("Your board:\n");
+        display_board(grid, shots, LAST_OPPONENT_X, LAST_OPPONENT_Y, LAST_X, LAST_Y);
     }
 
     if (DEBUG) printf("State: %s\n", state);
@@ -429,6 +429,7 @@ void play(const char* ip_address, bool restarted, bool host_mode, bool debug) {
 
     int turn;
 	HOST_MODE = host_mode;
+    DEBUG = debug;
     if (!restarted && !HOST_MODE) {
         printf("Connecting to %s...\n", ip_address);
         SOCKET_FD = connection_loop(ip_address, debug);
@@ -439,7 +440,6 @@ void play(const char* ip_address, bool restarted, bool host_mode, bool debug) {
             turn = recv_buffer[1] - '0';
         }
         IP_ADDRESS = ip_address;
-        DEBUG = debug;
     }
     else if (HOST_MODE) {
         PLAYER = 1;
@@ -475,7 +475,7 @@ void play(const char* ip_address, bool restarted, bool host_mode, bool debug) {
 
     bool end = false;
     while (!end) {
-        clear();
+        if (!DEBUG) clear();
         printf("Player %d's turn\n", turn);
         if (turn == 1) {
             if (PLAYER == 1) {
