@@ -5,9 +5,9 @@
 #include <signal.h>
 #include "battleship.h"  
 
-int server_fd = INVALID_SOCKET;
-int player1_fd = INVALID_SOCKET;
-int player2_fd = INVALID_SOCKET;
+int server_fd = (int)INVALID_SOCKET;
+int player1_fd = (int)INVALID_SOCKET;
+int player2_fd = (int)INVALID_SOCKET;
 
 extern void clear();  
 
