@@ -151,7 +151,7 @@ void relay_loop(SOCKET player1_fd, SOCKET player2_fd, bool debug) {
                 }
                 if (debug) {
                     printf("Transferring %d bytes from player %d to player %d\n", n, i + 1, 2 - i);
-                    printf("Content: %.*s\n", n, buffer);
+                    printf("Content: \"%.*s\"\n", n, buffer);
                 }
                 int written = send(to, buffer, n, 0); // Relay to other player
                 if (written == SOCKET_ERROR) {

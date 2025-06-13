@@ -3,7 +3,9 @@
 #include <string.h>  
 #include <time.h>  
 #include <signal.h>
-#include "battleship.h"  
+#include "battleship.h" 
+
+extern int SOCKET_FD;
 
 int server_fd = (int)INVALID_SOCKET;
 int player1_fd = (int)INVALID_SOCKET;
@@ -47,7 +49,7 @@ int main(int argc, char *argv[]) {
 
     signal(SIGINT, on_sigint);
 
-    if (!debug) clear();
+    clear();
 
     if (strcmp(argv[1], "--server") == 0 || strcmp(argv[1], "-s") == 0) {
         srand((unsigned int)time(NULL));
@@ -95,15 +97,29 @@ int main(int argc, char *argv[]) {
         }
         else {
 			host_mode = false;
+            if (argv[2] == NULL) {
+				printf("Please provide an IP address.\n");
+				return 1;
+            }
             ip_address = argv[2];
         }
+        bool end = false;
 		bool restarted = false;
-        while (true) {
+        while (!end) {
             play(ip_address, restarted, host_mode, debug);
-			printf("Game over. Press enter to play again or quit with (CTRL + C)\n");
-            while (getchar() != '\n');
+
+			printf("Game over. Play again? (y/n) (default: n)\n");
+            char c = getchar();
+
             if (!debug) clear();
 			restarted = true;
+
+            if (!host_mode) send_message(SOCKET_FD, c == 'y' ? "y" : "n", debug);
+            else send_message(SOCKET_FD, c == 'y' ? "y" : "n", debug);
+
+            char data[2];
+            receive_info_from_opponent(data, 2, "Error receiving data.");
+            if (c == 'n' || data[0] == '0') end = true;
         }
     }
 

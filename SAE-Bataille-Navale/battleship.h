@@ -86,6 +86,13 @@ void display_grid(char grid[DIM][DIM], int x, int y);
 void display_board(char fleet_grid[DIM][DIM], char shot_grid[DIM][DIM], int x, int y, int x_bis, int y_bis);
 
 /**
+ * @brief Displays the final board with the aid of player's shots and enemy's shots.
+ * @param shot The player's shot grid.
+ * @param shot_enemy The enemy's shot grid.
+ */
+void display_final_board(char shot[DIM][DIM], char shot_enemy[DIM][DIM]);
+
+/**
  * @brief Converts the grid to a string buffer.
  * @param grid The grid to convert.
  * @param buffer The output buffer.
@@ -184,6 +191,15 @@ void receive_info_from_opponent(char* buffer, int bufsize, const char* error_mes
  * @param enemy_grid The opponent's grid.
  */
 void placement_screen(char grid[DIM][DIM], Ship fleet[5], char enemy_grid[DIM][DIM]);
+
+/**
+ * @brief Displays the game over screen with the final results.
+ * @param shots The player's shot grid.
+ * @param shots_enemy The enemy's shot grid.
+ * @param message Message to display (e.g., "You win!" or "You lose!").
+ * @param player Player number (1 or 2).
+ */
+void game_over_screen(char shots[DIM][DIM], char shots_enemy[DIM][DIM], char* message, int player);
 
 /**
  * @brief Displays the player's action screen and processes input.

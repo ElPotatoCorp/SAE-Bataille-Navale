@@ -5,6 +5,8 @@ int PLAYER;
 const char *IP_ADDRESS;
 bool HOST_MODE;
 bool DEBUG;
+
+char COPY_GRID_ENEMY[DIM][DIM];
 int LAST_X, LAST_Y;
 int LAST_OPPONENT_X, LAST_OPPONENT_Y;
 const char *SHOT_MSG;
@@ -65,6 +67,7 @@ void display_box(char c, bool highlight) {
             printf("\033[38;2;0;150;255m%c \033[0m", c); // Default color for empty cells
             break;
         }
+		return;
     }
 
     switch (c) {
@@ -110,6 +113,20 @@ void display_board(char fleet_grid[DIM][DIM], char shot_grid[DIM][DIM], int x, i
     display_grid(fleet_grid, x, y);
     printf("---------------------\n");
     display_grid(shot_grid, x_bis, y_bis);
+}
+
+void display_final_board(char shot[DIM][DIM], char shot_enemy[DIM][DIM]) {
+    printf("  1 2 3 4 5 6 7 8 9 0");
+    for (int i = 0; i < DIM; i++) {
+        printf("\n%c ", 'A' + i);
+        for (int j = 0; j < DIM; j++) {
+            END = shot[i][j] == 'X';
+            display_box(COPY_GRID_ENEMY[i][j], false);
+        }
+    }
+    printf("\n---------------------\n");
+    display_grid(shot_enemy, -1, -1);
+    END = true;
 }
 
 void grid_to_string(char grid[DIM][DIM], char *buffer, size_t bufsize) {
@@ -348,7 +365,7 @@ void placement(char grid[DIM][DIM], int player, Ship fleet[]) {
 
         place_ship(fleet[choice].size, rot, x, y, fleet[choice].symbol, grid);
         fleet[choice].active = false;
-        if (!DEBUG) { clear(); printf("Check"); }
+        if (!DEBUG) clear();
 
         // Check if all ships placed
         bool finished = true;
@@ -420,7 +437,15 @@ void placement_screen(char grid[DIM][DIM], Ship fleet[5], char enemy_grid[DIM][D
     send_info_to_opponent(grid_str);
     receive_info_from_opponent(grid_str, DIM * DIM + 1, "Error receiving grid.");
     string_to_grid(grid_str, enemy_grid);
+    memcpy(COPY_GRID_ENEMY, enemy_grid, sizeof(COPY_GRID_ENEMY));
     if (DEBUG) game_pause();
+}
+
+void game_over_screen(char shots[DIM][DIM], char shots_enemy[DIM][DIM], char *message, int player) {
+    printf("\n--- Game Over : %s ---\n\n", message);
+    printf("Enemy's board:\n");
+    display_final_board(shots, shots_enemy);
+    printf("Player %d won!\n", player);
 }
 
 void action_screen(char grid[DIM][DIM], char shots[DIM][DIM], char grid_enemy[DIM][DIM], char shots_enemy[DIM][DIM], int *health) {
@@ -428,18 +453,19 @@ void action_screen(char grid[DIM][DIM], char shots[DIM][DIM], char grid_enemy[DI
     display_board(grid, shots, LAST_OPPONENT_X, LAST_OPPONENT_Y, LAST_X, LAST_Y);
 
     int coord[2] = { 0 };
+    get_coord(coord);
+
     LAST_X = coord[0];
     LAST_Y = coord[1];
     shoot(grid_enemy, shots, health, LAST_X, LAST_Y, false);
     
     if (health['#'] == 0 && health['@'] == 0 && health['%'] == 0 && health['&'] == 0 && health['$'] == 0) {
+        char state[MSG_LEN] = { 0 };
+        snprintf(state, sizeof(state), "END%d%d", LAST_X, LAST_Y);
         END = true;
 
-        printf("\n--- Game Over : You won ! ---\n");
-        printf("Enemy's fleet:\n");
-        display_board(grid_enemy, shots_enemy, LAST_OPPONENT_X, LAST_OPPONENT_Y, LAST_X, LAST_Y);
-        printf("Player %d won!\n", PLAYER);
-        send_info_to_opponent("END");
+        game_over_screen(shots, shots_enemy, "You won !", PLAYER);
+        send_info_to_opponent(state);
     } else {
         send_info_to_opponent(coord_to_string(coord));
     }
@@ -451,17 +477,19 @@ void waiting_screen(char grid[DIM][DIM], char shots[DIM][DIM], char grid_enemy[D
     printf("%s\n", SHOT_MSG);
 
     char state[MSG_LEN] = { 0 };
-    receive_info_from_opponent(state, MSG_LEN - 1,"Error receiving state.");
+    receive_info_from_opponent(state, MSG_LEN,"Error receiving state.");
 
-    if (strcmp(state, "END") == 0) {
-        printf("\n--- Game Over : You lost... ---\n");
-		printf("Enemy's board:\n");
-        display_board(grid_enemy, shots_enemy, LAST_OPPONENT_X, LAST_OPPONENT_Y, LAST_X, LAST_Y);
-        printf("Player %d won!\n", PLAYER);
-        game_pause();
-
+    if (strncmp(state, "END", 3) == 0) {
+        shoot(grid, shots_enemy, health, state[3] - '0', state[4] - '0', true);
         END = true;
+
+        game_over_screen(shots, shots_enemy, "You lost...", PLAYER == 1 ? 2 : 1);
+        return;
     }
+
+	LAST_OPPONENT_X = state[0] - '0';
+	LAST_OPPONENT_Y = state[1] - '0';
+    shoot(grid, shots_enemy, health, LAST_OPPONENT_X, LAST_OPPONENT_Y, true);
 
     if (DEBUG) printf("State: %s\n", state);
 }
@@ -474,13 +502,15 @@ void play(const char* ip_address, bool restarted, bool host_mode, bool debug) {
     SHOT_MSG = NULL;
     END = false;
 
-    int turn;
+    int turn = 0;
 	HOST_MODE = host_mode;
     DEBUG = debug;
     if (!restarted && !HOST_MODE) {
         printf("Connecting to %s...\n", ip_address);
         SOCKET_FD = connection_loop(ip_address, debug);
         if (SOCKET_FD != INVALID_SOCKET) {
+			printf("Connected to %s\n", ip_address);
+            printf("Waiting for other player...\n");
             char recv_buffer[MSG_LEN] = { 0 };
             receive_info_from_opponent(recv_buffer, 3, "Error connecting to server.");
             PLAYER = recv_buffer[0] - '0';
