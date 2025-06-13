@@ -102,8 +102,9 @@ int relay_message(int source_fd, int dest_fd);
  * @brief Main relay loop: forwards messages between two clients, and handles disconnects.
  * @param player1_fd The first player's socket descriptor.
  * @param player2_fd The second player's socket descriptor.
+ * @param debug Enable debug output if true.
  */
-void relay_loop(int player1_fd, int player2_fd);
+void relay_loop(int player1_fd, int player2_fd, bool debug);
 
 /**
  * @brief Closes the provided sockets.

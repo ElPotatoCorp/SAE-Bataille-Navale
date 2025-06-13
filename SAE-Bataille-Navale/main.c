@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
 		send_message(player1_fd, data, debug);
         data[0] = 2 + '0';
         send_message(player2_fd, data, debug);
-        relay_loop(player1_fd, player2_fd);
+        relay_loop(player1_fd, player2_fd, debug);
 
         cleanup(player1_fd, player2_fd, server_fd);
     }

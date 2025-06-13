@@ -123,7 +123,7 @@ void on_sigint(int signum) {
 
 // Main relay loop: relays messages between two connected players using select().
 // If a player disconnects, notifies the other and shuts down.
-void relay_loop(SOCKET player1_fd, SOCKET player2_fd) {
+void relay_loop(SOCKET player1_fd, SOCKET player2_fd, bool debug) {
     fd_set readfds;
     SOCKET fds[2] = { player1_fd, player2_fd };
     global_player1_fd = player1_fd;
@@ -148,6 +148,10 @@ void relay_loop(SOCKET player1_fd, SOCKET player2_fd) {
                     send_404_and_close(to);
                     closesocket(from);
                     return;
+                }
+                if (debug) {
+                    printf("Transferring %d bytes from player %d to player %d\n", n, i + 1, 2 - i);
+                    printf("Content: %.*s\n", n, buffer);
                 }
                 int written = send(to, buffer, n, 0); // Relay to other player
                 if (written == SOCKET_ERROR) {
