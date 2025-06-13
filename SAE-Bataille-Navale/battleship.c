@@ -187,25 +187,6 @@ void get_coord(int coord[2]) {
     }
 }
 
-char *coord_to_string(int *coord) {  
-    if (coord == NULL) {  
-        fprintf(stderr, "Error: NULL pointer passed to coord_to_string.\n");  
-        return NULL;  
-    }  
-
-    char *coord_str = malloc(3 * sizeof(char));  
-    if (coord_str == NULL) {  
-        fprintf(stderr, "Error: Memory allocation failed in coord_to_string.\n");  
-        return NULL;  
-    }  
-
-    coord_str[0] = '0' + coord[0];  
-    coord_str[1] = '0' + coord[1];  
-    coord_str[2] = '\0';  
-
-    return coord_str;  
-}
-
 bool can_be_placed(int size, int rot, int i, int j, char grid[DIM][DIM]) {
     for (int k = 0; k < size; ++k) {
         int x = i + (rot == 3 ? k : rot == 1 ? -k : 0);
@@ -402,7 +383,7 @@ void shoot(char enemy_grid[DIM][DIM], char shots_grid[DIM][DIM], int* ship_healt
 
 void server_communication_handler(int socket, char* buffer, int bufsize, const char *message)
 {
-    int code = receive_message(SOCKET_FD, buffer, MSG_LEN - 1, DEBUG);
+    int code = receive_message(SOCKET_FD, buffer, MSG_LEN, DEBUG);
     if (code == 404) {
         fprintf(stdout, "Warning: %s\n", "The other player has left or the connexion has been closed.");
 		close_connection(socket, DEBUG);
@@ -426,16 +407,19 @@ void receive_info_from_opponent(char *buffer, int bufsize, const char *error_mes
 }
 
 void placement_screen(char grid[DIM][DIM], Ship fleet[5], char enemy_grid[DIM][DIM]) {
-    char grid_str[DIM * DIM + 1];
+    char grid_str[DIM * DIM + 1] = { 0 };
     placement(grid, PLAYER, fleet);
-    grid_to_string(grid, grid_str, sizeof(grid_str));
+    grid_to_string(grid, grid_str, DIM * DIM + 1);
 
     if (!DEBUG) clear();
     printf("Waiting for other player...\n");
     fflush(stdout);
 
     send_info_to_opponent(grid_str);
+
     receive_info_from_opponent(grid_str, DIM * DIM + 1, "Error receiving grid.");
+    grid_str[DIM * DIM] = '\0';
+
     string_to_grid(grid_str, enemy_grid);
     memcpy(COPY_GRID_ENEMY, enemy_grid, sizeof(COPY_GRID_ENEMY));
 }
@@ -448,6 +432,7 @@ void game_over_screen(char shots[DIM][DIM], char shots_enemy[DIM][DIM], char *me
 }
 
 void action_screen(char grid[DIM][DIM], char shots[DIM][DIM], char grid_enemy[DIM][DIM], char shots_enemy[DIM][DIM], int *health) {
+    printf("Your turn:\n");
     printf("Your board:\n");
     display_board(grid, shots, LAST_OPPONENT_X, LAST_OPPONENT_Y, LAST_X, LAST_Y);
 
@@ -466,17 +451,23 @@ void action_screen(char grid[DIM][DIM], char shots[DIM][DIM], char grid_enemy[DI
         game_over_screen(shots, shots_enemy, "You won !", PLAYER);
         send_info_to_opponent(state);
     } else {
-        send_info_to_opponent(coord_to_string(coord));
+        char coord_str[3];
+        coord_str[0] = '0' + coord[0];
+        coord_str[1] = '0' + coord[1];
+        coord_str[2] = '\0';
+        send_info_to_opponent(coord_str);
     }
 }
 
 void waiting_screen(char grid[DIM][DIM], char shots[DIM][DIM], char grid_enemy[DIM][DIM], char shots_enemy[DIM][DIM], int *health) {
+    printf("Other player's turn:\n");
     printf("Your board:\n");
     display_board(grid, shots, LAST_OPPONENT_X, LAST_OPPONENT_Y, LAST_X, LAST_Y);
-    printf("%s\n", SHOT_MSG);
+    if (SHOT_MSG) printf("%s\n", SHOT_MSG);
 
     char state[MSG_LEN] = { 0 };
     receive_info_from_opponent(state, MSG_LEN,"Error receiving state.");
+    state[MSG_LEN - 1] = '\0'; // Ensure null-termination
 
     if (strncmp(state, "END", 3) == 0) {
         shoot(grid, shots_enemy, health, state[3] - '0', state[4] - '0', true);
@@ -552,7 +543,6 @@ void play(const char* ip_address, bool restarted, bool host_mode, bool debug) {
     
     while (!END) {
         if (!DEBUG) clear();
-        printf("Player %d's turn\n", turn);
         if (turn == 1) {
             if (PLAYER == 1) {
                 action_screen(grid_P1, shots_P1, grid_P2, shots_P2, health_P2);

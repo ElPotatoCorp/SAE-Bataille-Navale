@@ -114,13 +114,6 @@ void string_to_grid(const char* buffer, char grid[DIM][DIM]);
 void get_coord(int coord[2]);
 
 /**
- * @brief Converts a coordinate to a string (e.g., "A5").
- * @param coord Pointer to a 2-element int array [i, j].
- * @return String representation of the coordinate.
- */
-char *coord_to_string(int* coord);
-
-/**
  * @brief Checks if a ship can be placed at a given location and orientation.
  * @param size Ship length.
  * @param rot 0 = horizontal, 1 = vertical.
