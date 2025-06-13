@@ -69,7 +69,7 @@ int receive_client_message(int client_fd, char* buffer, int bufsize, int debug) 
     int n = recv(client_fd, buffer, bufsize - 1, 0); // Leave space for null terminator
     if (n < 0) {
         if (debug) perror("recv() failed");
-        return -1;
+        exit(1);
     }
     if (n == 0) {
         if (debug) fprintf(stderr, "Client disconnected while receiving\n");

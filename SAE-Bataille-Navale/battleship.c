@@ -438,7 +438,6 @@ void placement_screen(char grid[DIM][DIM], Ship fleet[5], char enemy_grid[DIM][D
     receive_info_from_opponent(grid_str, DIM * DIM + 1, "Error receiving grid.");
     string_to_grid(grid_str, enemy_grid);
     memcpy(COPY_GRID_ENEMY, enemy_grid, sizeof(COPY_GRID_ENEMY));
-    if (DEBUG) game_pause();
 }
 
 void game_over_screen(char shots[DIM][DIM], char shots_enemy[DIM][DIM], char *message, int player) {

@@ -78,7 +78,7 @@ int receive_client_message(SOCKET client_fd, char* buffer, int bufsize, int debu
     int n = recv(client_fd, buffer, bufsize - 1, 0);
     if (n == SOCKET_ERROR) {
         if (debug) fprintf(stderr, "recv() failed: %d\n", WSAGetLastError());
-        return -1;
+        exit(1);
     }
     if (n == 0) {
         if (debug) fprintf(stderr, "Client disconnected while receiving\n");
