@@ -45,7 +45,6 @@ int main(int argc, char *argv[]) {
     }  
 
     bool debug = (strcmp(argv[argc - 1], "--debug") == 0);
-    printf("%d", debug);
 
     signal(SIGINT, on_sigint);
 
